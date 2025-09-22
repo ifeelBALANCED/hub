@@ -11,7 +11,7 @@ pre-commit:
       glob: "*.{js,jsx,ts,tsx,vue}"
       run: |
         echo "🔍 Linting code..."
-        pnpm run lint {staged_files}
+        bun run lint {staged_files}
       skip: [merge, rebase]
 
     format:
@@ -19,13 +19,13 @@ pre-commit:
       stage_fixed: true
       run: |
         echo "✨ Formatting code..."
-        pnpm run format
+        bun run format
 
     typecheck:
       glob: "*.{ts,tsx}"
       run: |
         echo "🔎 Type checking..."
-        pnpm run type-check
+        bun run type-check
       skip: [merge, rebase]
 
     no-debug:
@@ -54,9 +54,9 @@ post-merge:
       run: |
         echo "📦 Checking dependencies..."
         # use ORIG_HEAD to refer to the previous HEAD without shell brace expansion
-        if git diff --name-only ORIG_HEAD HEAD | grep -E 'pnpm\.lock|package\.json'; then
+        if git diff --name-only ORIG_HEAD HEAD | grep -E 'bun\.lock|package\.json'; then
           echo "📦 Updating dependencies..."
-          pnpm install
+          bun install
         fi
 
 post-checkout:
@@ -65,7 +65,7 @@ post-checkout:
       run: |
         echo "🧹 Preparing workspace..."
         # $3 = "1" when switching branches
-        if [ "$3" = "1" ] && git diff --name-only $1 $2 | grep -E 'pnpm\.lock|package\.json'; then
+        if [ "$3" = "1" ] && git diff --name-only $1 $2 | grep -E 'bun\.lock|package\.json'; then
           echo "📦 Updating dependencies for new branch..."
-          pnpm install
+          bun install
         fi
