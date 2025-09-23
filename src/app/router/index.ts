@@ -11,7 +11,9 @@ interface RouteMeta {
 }
 
 const HomePage = () => import('@/views/HomeView.vue')
-const AboutPage = () => import('@/views/AboutView.vue')
+const SignInPage = () => import('@/views/SignIn.vue')
+const GetStartedPage = () => import('@/views/GetStarted.vue')
+const MeetingPage = () => import('@/views/MeetingView.vue')
 const NotFoundPage = () => import('@/views/NotFound.vue')
 
 export const routes: RouteRecordRaw[] = [
@@ -24,13 +26,30 @@ export const routes: RouteRecordRaw[] = [
     } satisfies RouteMeta,
   },
   {
-    path: ROUTE_PATHS.ABOUT,
-    name: 'about',
-    component: AboutPage,
+    path: ROUTE_PATHS.SIGN_IN,
+    name: 'sign-in',
+    component: SignInPage,
     meta: {
-      title: 'About',
+      title: 'Sign In',
     } satisfies RouteMeta,
   },
+  {
+    path: ROUTE_PATHS.GET_STARTED,
+    name: 'get-started',
+    component: GetStartedPage,
+    meta: {
+      title: 'Get Started',
+    } satisfies RouteMeta,
+  },
+  {
+    path: ROUTE_PATHS.MEETING,
+    name: 'meeting',
+    component: MeetingPage,
+    meta: {
+      title: 'Meeting',
+    } satisfies RouteMeta,
+  },
+
   {
     path: ROUTE_PATHS.NOT_FOUND,
     name: 'not-found',

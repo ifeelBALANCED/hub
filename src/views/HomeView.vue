@@ -1,7 +1,7 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import HeroSection from '@/shared/ui/core/HeroSection.vue'
+</script>
 
 <template>
-  <main>
-    <h1>Home</h1>
-  </main>
+  <HeroSection />
 </template>
