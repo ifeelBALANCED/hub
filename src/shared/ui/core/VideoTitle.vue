@@ -27,15 +27,18 @@ defineProps<{
   >
     <div
       v-if="participant.isVideoOn"
-      class="aspect-video bg-gradient-secondary flex items-center justify-center"
+      class="aspect-video bg-gradient-secondary flex items-center justify-center relative"
     >
-      <div class="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center">
-        <User class="h-8 w-8 text-accent" />
+      <div class="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center">
+        <User class="h-6 w-6 text-accent" />
       </div>
     </div>
-    <div v-else class="aspect-video bg-background-secondary flex items-center justify-center">
-      <div class="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-        <User class="h-8 w-8 text-foreground-muted" />
+    <div
+      v-else
+      class="aspect-video bg-background-secondary flex items-center justify-center relative"
+    >
+      <div class="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
+        <User class="h-6 w-6 text-foreground-muted" />
       </div>
     </div>
 

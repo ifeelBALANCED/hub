@@ -2,6 +2,7 @@
 import { useRouter } from 'vue-router'
 import { ArrowRight, Video, Shield, Zap } from 'lucide-vue-next'
 import HubButton from '@/shared/ui/core/HubButton.vue'
+import ThemeToggle from '@/shared/ui/additionals/ThemeToggle.vue'
 
 const router = useRouter()
 
@@ -43,7 +44,7 @@ const goToGetStarted = () => {
 
 <template>
   <div class="min-h-screen bg-background">
-    <header class="flex items-center justify-between p-6 border-b border-border">
+    <header class="flex items-center justify-between p-4 md:p-6 border-b border-border">
       <div class="flex items-center space-x-2">
         <div
           class="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-glow"
@@ -53,7 +54,7 @@ const goToGetStarted = () => {
         <span class="text-2xl font-semibold text-foreground">Hub</span>
       </div>
 
-      <nav class="hidden md:flex items-center space-x-8">
+      <nav class="hidden md:flex items-center space-x-6">
         <a href="#features" class="text-foreground-muted hover:text-foreground transition-colors">
           Features
         </a>
@@ -63,11 +64,14 @@ const goToGetStarted = () => {
         <a href="#about" class="text-foreground-muted hover:text-foreground transition-colors">
           About
         </a>
+        <div class="w-px h-6 bg-border"></div>
+        <ThemeToggle />
       </nav>
 
       <div class="flex items-center space-x-3">
         <HubButton variant="ghost" @click="goToSignIn"> Sign In </HubButton>
         <HubButton variant="hero" @click="goToGetStarted"> Get Started </HubButton>
+        <ThemeToggle class="md:hidden" />
       </div>
     </header>
 

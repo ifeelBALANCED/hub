@@ -4,7 +4,7 @@
   "typescript": true,
   "tailwind": {
     "config": "tailwind.config.ts",
-    "css": "src/index.css",
+    "css": "src/app/tailwind/main.css",
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""

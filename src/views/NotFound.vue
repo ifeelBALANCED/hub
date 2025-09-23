@@ -10,11 +10,11 @@ watchEffect(() => {
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-gray-100">
+  <div class="flex min-h-screen items-center justify-center bg-background">
     <div class="text-center">
-      <h1 class="mb-4 text-4xl font-bold">404</h1>
-      <p class="mb-4 text-xl text-gray-600">Oops! Page not found</p>
-      <router-link to="/" class="text-blue-500 underline hover:text-blue-700">
+      <h1 class="mb-4 text-4xl font-bold text-foreground">404</h1>
+      <p class="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
+      <router-link to="/" class="text-primary underline hover:text-primary/80 transition-colors">
         Return to Home
       </router-link>
     </div>

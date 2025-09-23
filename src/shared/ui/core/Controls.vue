@@ -31,9 +31,11 @@ const toggleScreenShare = () => {
 </script>
 
 <template>
-  <div class="fixed bottom-0 left-0 right-0 bg-background-secondary border-t border-border">
-    <div class="flex items-center justify-center p-6">
-      <div class="flex items-center space-x-3">
+  <div
+    class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-background-secondary/95 backdrop-blur-sm border border-border rounded-2xl shadow-lg"
+  >
+    <div class="flex items-center justify-center p-4">
+      <div class="flex items-center space-x-2">
         <HubButton
           :variant="isAudioOn ? 'control' : 'danger'"
           size="icon-lg"
@@ -63,7 +65,7 @@ const toggleScreenShare = () => {
           <Monitor class="h-5 w-5" />
         </HubButton>
 
-        <div class="w-px h-8 bg-border mx-2" />
+        <div class="w-px h-6 bg-border mx-1" />
 
         <HubButton variant="control" size="icon-lg" class="shadow-soft">
           <Camera class="h-5 w-5" />
@@ -77,7 +79,7 @@ const toggleScreenShare = () => {
           <Settings class="h-5 w-5" />
         </HubButton>
 
-        <div class="w-px h-8 bg-border mx-2" />
+        <div class="w-px h-6 bg-border mx-1" />
 
         <HubButton variant="danger" size="icon-lg" class="shadow-soft">
           <Phone class="h-5 w-5 rotate-[135deg]" />

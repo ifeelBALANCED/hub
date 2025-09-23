@@ -3,6 +3,11 @@ import {} from 'vue-router'
 import { computed } from 'vue'
 import { useRoute, RouterView } from 'vue-router'
 import { Toaster } from 'vue-sonner'
+import { createThemeProvider } from '@/shared/composables/useTheme'
+import ThemeToggle from '@/shared/ui/additionals/ThemeToggle.vue'
+
+// Create theme provider context
+createThemeProvider()
 
 const route = useRoute()
 
@@ -15,11 +20,13 @@ const layout = computed(() => {
 </script>
 
 <template>
-  <Toaster richColors :duration="2000" />
-  <component v-if="layout" :is="layout">
-    <router-view />
-  </component>
-  <router-view v-else />
+  <div id="app" class="min-h-screen bg-background font-sans antialiased">
+    <Toaster richColors :duration="2000" />
+    <component v-if="layout" :is="layout">
+      <router-view />
+    </component>
+    <router-view v-else />
+  </div>
 </template>
 
 <style scoped></style>
