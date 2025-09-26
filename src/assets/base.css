@@ -1,4 +1,3 @@
-/* color palette from <https://github.com/vuejs/theme> */
 :root {
   --vt-c-white: #ffffff;
   --vt-c-white-soft: #f8f8f8;
@@ -21,7 +20,6 @@
   --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
 }
 
-/* semantic color variables for this project */
 :root {
   --color-background: var(--vt-c-white);
   --color-background-soft: var(--vt-c-white-soft);
@@ -32,6 +30,27 @@
 
   --color-heading: var(--vt-c-text-light-1);
   --color-text: var(--vt-c-text-light-1);
+
+  --border: var(--vt-c-divider-light-2);
+  --input: var(--vt-c-white-soft);
+  --ring: var(--vt-c-indigo);
+  --background: var(--vt-c-white);
+  --foreground: var(--vt-c-text-light-1);
+  --primary: var(--vt-c-indigo);
+  --primary-foreground: var(--vt-c-white);
+  --secondary: var(--vt-c-white-soft);
+  --secondary-foreground: var(--vt-c-text-light-1);
+  --destructive: #ef4444;
+  --destructive-foreground: var(--vt-c-white);
+  --muted: var(--vt-c-white-soft);
+  --muted-foreground: var(--vt-c-text-light-2);
+  --accent: var(--vt-c-indigo);
+  --accent-foreground: var(--vt-c-white);
+  --popover: var(--vt-c-white);
+  --popover-foreground: var(--vt-c-text-light-1);
+  --card: var(--vt-c-white);
+  --card-foreground: var(--vt-c-text-light-1);
+  --radius: 6px;
 
   --section-gap: 160px;
 }
@@ -47,6 +66,26 @@
 
     --color-heading: var(--vt-c-text-dark-1);
     --color-text: var(--vt-c-text-dark-2);
+
+    --border: var(--vt-c-divider-dark-2);
+    --input: var(--vt-c-black-soft);
+    --ring: var(--vt-c-white);
+    --background: var(--vt-c-black);
+    --foreground: var(--vt-c-text-dark-1);
+    --primary: #3b82f6;
+    --primary-foreground: var(--vt-c-black);
+    --secondary: var(--vt-c-black-soft);
+    --secondary-foreground: var(--vt-c-text-dark-1);
+    --destructive: #dc2626;
+    --destructive-foreground: var(--vt-c-white);
+    --muted: var(--vt-c-black-soft);
+    --muted-foreground: var(--vt-c-text-dark-2);
+    --accent: #3b82f6;
+    --accent-foreground: var(--vt-c-black);
+    --popover: var(--vt-c-black);
+    --popover-foreground: var(--vt-c-text-dark-1);
+    --card: var(--vt-c-black);
+    --card-foreground: var(--vt-c-text-dark-1);
   }
 }
 

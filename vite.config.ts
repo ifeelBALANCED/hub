@@ -73,7 +73,7 @@ export default defineConfig(({ mode }) => {
     },
 
     optimizeDeps: {
-      include: ['vue', 'vue-router', 'pinia', '@vueuse/core', 'naive-ui'],
+      include: ['vue', 'vue-router', 'pinia', '@vueuse/core', 'reka-ui'],
     },
 
     define: {
