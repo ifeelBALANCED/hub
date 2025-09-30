@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ArrowRight, Video, Shield, Zap, LogOut } from 'lucide-vue-next'
+import { ArrowRight, Video, Shield, Zap } from 'lucide-vue-next'
 import HubButton from '@/shared/ui/core/HubButton.vue'
 import ThemeToggle from '@/shared/ui/additionals/ThemeToggle.vue'
+import UserDropdown from '@/shared/ui/core/UserDropdown.vue'
 import { useAuthSession } from '@/shared/composables/useAuth'
 
 const features = [
@@ -30,11 +31,6 @@ const emit = defineEmits<{
   signIn: []
   getStarted: []
 }>()
-
-const handleLogout = () => {
-  // Logout is handled by the useLogout mutation in the header
-  // For consistency, we could emit an event or handle it here
-}
 </script>
 
 <template>
@@ -69,24 +65,7 @@ const handleLogout = () => {
           <HubButton variant="hero" @click="$emit('getStarted')"> Get Started </HubButton>
         </div>
 
-        <div
-          v-if="authSession.isAuthenticated"
-          class="flex items-center space-x-3 pl-3 border-l border-border text-sm text-foreground"
-        >
-          <div class="flex flex-col leading-tight">
-            <span class="font-semibold">{{ authSession.userDisplayName }}</span>
-            <span class="text-xs text-foreground-muted">{{ authSession.userEmail }}</span>
-          </div>
-          <HubButton
-            variant="ghost"
-            size="icon-sm"
-            class="hover:text-destructive"
-            :disabled="authSession.isAuthenticating"
-            @click="handleLogout"
-          >
-            <LogOut class="h-4 w-4" />
-          </HubButton>
-        </div>
+        <UserDropdown v-if="authSession.isAuthenticated" />
 
         <ThemeToggle class="md:hidden" />
       </div>

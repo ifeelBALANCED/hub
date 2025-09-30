@@ -18,7 +18,6 @@ export const useAuthStore = defineStore('auth', () => {
     queryClient.removeQueries({ queryKey: QUERY_KEYS.userMe() })
     queryClient.clear()
 
-    notificationService.info({ title: 'Logged out successfully' })
     router.push({ name: 'get-started' })
   }
 

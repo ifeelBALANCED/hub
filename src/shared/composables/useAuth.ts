@@ -102,25 +102,18 @@ export function useLogout() {
   return useMutation({
     mutationKey: MUTATION_KEYS.auth.logout,
     mutationFn: async () => {
-      try {
-        const result = await logoutAuthLogoutPost()
-        return result
-      } catch {
-        return { success: true, message: 'Logged out locally' }
-      }
+      return logoutAuthLogoutPost()
     },
     onSuccess: () => {
       userStore.clearUser()
       authStore.handleLogoutSuccess()
+      notificationService.success({ title: 'Successfully logged out' })
     },
     onError: (error: AxiosError<ApiErrorResponse>) => {
+      const errorMessage = extractErrorMessage(error)
+      notificationService.error({ title: errorMessage })
       userStore.clearUser()
-      try {
-        router.push({ name: 'get-started' })
-      } catch {
-        window.location.href = '/get-started'
-      }
-      authStore.handleAuthError(error)
+      router.push({ name: 'get-started' })
     },
   })
 }
@@ -149,7 +142,6 @@ export function useGoogleAuth() {
         userStore.setUser(userData)
         await authStore.handleLoginSuccess()
         notificationService.success({ title: 'Successfully signed in with Google' })
-        authStore.handleLoginSuccess()
       } catch {
         notificationService.error({ title: 'Failed to complete Google sign-in' })
       }

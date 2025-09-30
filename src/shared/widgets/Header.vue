@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { Settings, Users, MessageSquare, ArrowLeft, LogOut } from 'lucide-vue-next'
+import { Settings, Users, MessageSquare, ArrowLeft } from 'lucide-vue-next'
 import HubButton from '@/shared/ui/core/HubButton.vue'
 import ThemeToggle from '@/shared/ui/additionals/ThemeToggle.vue'
-import { useAuthSession, useLogout } from '@/shared/composables/useAuth'
+import UserDropdown from '@/shared/ui/core/UserDropdown.vue'
+import { useAuthSession } from '@/shared/composables/useAuth'
+import { watch } from 'vue'
 
 const router = useRouter()
 const route = useRoute()
 const authSession = useAuthSession()
-const logoutMutation = useLogout()
 
 const roomId = route.params.roomId as string
 
@@ -18,10 +19,6 @@ const goHome = () => {
 
 const goToSignIn = () => {
   router.push({ name: 'sign-in' })
-}
-
-const handleLogout = () => {
-  logoutMutation.mutate()
 }
 </script>
 
@@ -60,24 +57,7 @@ const handleLogout = () => {
         <HubButton variant="outline" size="sm" @click="goToSignIn"> Sign In </HubButton>
       </div>
 
-      <div
-        v-if="authSession.isAuthenticated"
-        class="flex items-center space-x-3 pl-3 border-l border-border text-sm text-foreground"
-      >
-        <div class="flex flex-col leading-tight">
-          <span class="font-semibold">{{ authSession.userDisplayName }}</span>
-          <span class="text-xs text-foreground-muted">{{ authSession.userEmail }}</span>
-        </div>
-        <HubButton
-          variant="ghost"
-          size="icon-sm"
-          class="hover:text-destructive"
-          :disabled="authSession.isAuthenticating"
-          @click="handleLogout"
-        >
-          <LogOut class="h-4 w-4" />
-        </HubButton>
-      </div>
+      <UserDropdown v-if="authSession.isAuthenticated" />
     </div>
   </header>
 </template>
