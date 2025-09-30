@@ -1,1 +1,3 @@
-export { queryClient, VueQueryPlugin } from './query-client'
+export { VueQueryPlugin, queryClient } from './query-client'
+export * from './mutator/custom-instance'
+export { getHealthCheckGetQueryOptions } from './client'

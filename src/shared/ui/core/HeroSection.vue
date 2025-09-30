@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-import { ArrowRight, Video, Shield, Zap } from 'lucide-vue-next'
+import { ArrowRight, Video, Shield, Zap, LogOut } from 'lucide-vue-next'
 import HubButton from '@/shared/ui/core/HubButton.vue'
 import ThemeToggle from '@/shared/ui/additionals/ThemeToggle.vue'
-
-const router = useRouter()
+import { useAuthSession } from '@/shared/composables/useAuth'
 
 const features = [
   {
@@ -24,21 +22,18 @@ const features = [
   },
 ]
 
-const handleStartMeeting = () => {
-  const roomId = Math.random().toString(36).substring(2, 8)
-  router.push(`/meeting/${roomId}`)
-}
+const authSession = useAuthSession()
 
-const handleJoinMeeting = () => {
-  router.push('/meeting')
-}
+const emit = defineEmits<{
+  startMeeting: []
+  joinMeeting: []
+  signIn: []
+  getStarted: []
+}>()
 
-const goToSignIn = () => {
-  router.push('/signin')
-}
-
-const goToGetStarted = () => {
-  router.push('/get-started')
+const handleLogout = () => {
+  // Logout is handled by the useLogout mutation in the header
+  // For consistency, we could emit an event or handle it here
 }
 </script>
 
@@ -69,8 +64,30 @@ const goToGetStarted = () => {
       </nav>
 
       <div class="flex items-center space-x-3">
-        <HubButton variant="ghost" @click="goToSignIn"> Sign In </HubButton>
-        <HubButton variant="hero" @click="goToGetStarted"> Get Started </HubButton>
+        <div v-if="!authSession.isAuthenticated" class="flex items-center space-x-2">
+          <HubButton variant="ghost" @click="$emit('signIn')"> Sign In </HubButton>
+          <HubButton variant="hero" @click="$emit('getStarted')"> Get Started </HubButton>
+        </div>
+
+        <div
+          v-if="authSession.isAuthenticated"
+          class="flex items-center space-x-3 pl-3 border-l border-border text-sm text-foreground"
+        >
+          <div class="flex flex-col leading-tight">
+            <span class="font-semibold">{{ authSession.userDisplayName }}</span>
+            <span class="text-xs text-foreground-muted">{{ authSession.userEmail }}</span>
+          </div>
+          <HubButton
+            variant="ghost"
+            size="icon-sm"
+            class="hover:text-destructive"
+            :disabled="authSession.isAuthenticating"
+            @click="handleLogout"
+          >
+            <LogOut class="h-4 w-4" />
+          </HubButton>
+        </div>
+
         <ThemeToggle class="md:hidden" />
       </div>
     </header>
@@ -91,11 +108,11 @@ const goToGetStarted = () => {
         </p>
 
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-          <HubButton variant="hero" size="lg" class="text-lg px-8" @click="handleStartMeeting">
+          <HubButton variant="hero" size="lg" class="text-lg px-8" @click="$emit('startMeeting')">
             Start Meeting
             <ArrowRight class="ml-2 h-5 w-5" />
           </HubButton>
-          <HubButton variant="outline" size="lg" class="text-lg px-8" @click="handleJoinMeeting">
+          <HubButton variant="outline" size="lg" class="text-lg px-8" @click="$emit('joinMeeting')">
             Join Meeting
           </HubButton>
         </div>

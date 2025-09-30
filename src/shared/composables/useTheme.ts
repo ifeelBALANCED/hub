@@ -1,8 +1,15 @@
 import { readonly, provide, inject, type Ref, type InjectionKey, computed, watch } from 'vue'
 import { useLocalStorage, useMediaQuery } from '@vueuse/core'
+import { THEME_STORAGE_KEY, THEME_DARK_CLASS } from '@/shared/lib/constants'
 
+/**
+ * Available theme options for the application.
+ */
 export type Theme = 'dark' | 'light' | 'system'
 
+/**
+ * Context interface for theme management.
+ */
 type ThemeContext = {
   theme: Readonly<Ref<Theme>>
   actualTheme: Readonly<Ref<'dark' | 'light'>>
@@ -10,9 +17,14 @@ type ThemeContext = {
   setTheme: (theme: Theme) => void
 }
 
-const THEME_STORAGE_KEY = 'hub-theme'
 const ThemeContextKey: InjectionKey<ThemeContext> = Symbol('theme-context')
 
+/**
+ * Provides theme management functionality with local storage persistence.
+ * Automatically detects system preference and applies theme classes.
+ *
+ * @returns {Object} Theme context with current theme, actual theme, and control functions
+ */
 export function useTheme() {
   const theme = useLocalStorage<Theme>(THEME_STORAGE_KEY, 'system')
 
@@ -29,9 +41,9 @@ export function useTheme() {
     actualTheme,
     (newTheme) => {
       if (newTheme === 'dark') {
-        document.documentElement.classList.add('dark')
+        document.documentElement.classList.add(THEME_DARK_CLASS)
       } else {
-        document.documentElement.classList.remove('dark')
+        document.documentElement.classList.remove(THEME_DARK_CLASS)
       }
     },
     { immediate: true },
@@ -54,6 +66,19 @@ export function useTheme() {
   }
 }
 
+/**
+ * Creates and provides the theme context to child components.
+ * Must be called in a parent component to enable theme functionality.
+ *
+ * @example
+ * ```vue
+ * <script setup>
+ * import { createThemeProvider } from '@/shared/composables/useTheme'
+ *
+ * createThemeProvider()
+ * </script>
+ * ```
+ */
 export function createThemeProvider() {
   const { theme, actualTheme, toggleTheme, setTheme } = useTheme()
 
@@ -65,6 +90,13 @@ export function createThemeProvider() {
   })
 }
 
+/**
+ * Consumes the theme context from a parent provider.
+ * Throws an error if used outside of a ThemeProvider.
+ *
+ * @returns {ThemeContext} The theme context with theme state and controls
+ * @throws {Error} If used outside of a ThemeProvider
+ */
 export function useThemeContext(): ThemeContext {
   const context = inject(ThemeContextKey)
 

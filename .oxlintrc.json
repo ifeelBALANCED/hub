@@ -47,7 +47,6 @@
     "vue/valid-v-slot": "error",
     "vue/valid-v-text": "error",
 
-    // TypeScript type-aware rules
     "typescript/await-thenable": "error",
     "typescript/no-array-delete": "error",
     "typescript/no-base-to-string": "error",
@@ -115,5 +114,12 @@
     "space-infix-ops": "error",
     "space-unary-ops": "error"
   },
-  "ignore": ["node_modules/**", "dist/**", "build/**", "coverage/**", "*.min.js"]
+  "ignore": [
+    "node_modules/**",
+    "dist/**",
+    "build/**",
+    "coverage/**",
+    "*.min.js",
+    "src/shared/api/client.ts"
+  ]
 }

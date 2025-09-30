@@ -3,6 +3,8 @@ import type { HTMLAttributes } from 'vue'
 import { useVModel } from '@vueuse/core'
 import { cn } from '@/shared/lib/cn'
 
+defineOptions({ inheritAttrs: false })
+
 const props = defineProps<{
   defaultValue?: string | number
   modelValue?: string | number
@@ -22,6 +24,7 @@ const modelValue = useVModel(props, 'modelValue', emits, {
 <template>
   <input
     v-model="modelValue"
+    v-bind="$attrs"
     data-slot="input"
     :class="
       cn(

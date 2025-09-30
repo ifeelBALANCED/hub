@@ -6,7 +6,6 @@ import { Toaster } from 'vue-sonner'
 import { createThemeProvider } from '@/shared/composables/useTheme'
 import ThemeToggle from '@/shared/ui/additionals/ThemeToggle.vue'
 
-// Create theme provider context
 createThemeProvider()
 
 const route = useRoute()

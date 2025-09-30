@@ -22,6 +22,6 @@ export const appEnv = {
   PORT: getEnvVariable('VITE_PORT', '5173'),
   HOST: getEnvVariable('VITE_HOST', 'localhost'),
   PREVIEW_PORT: getEnvVariable('VITE_PREVIEW_PORT', '4173'),
-  SWAGGER_URL: getEnvVariable('VITE_SWAGGER_URL', 'http://localhost:8080/api/v1/swagger.json'),
+  SWAGGER_URL: getEnvVariable('VITE_SWAGGER_URL', 'http://localhost:8000/api/docs'),
   BACKEND_URL: getBackendUrl(),
 }

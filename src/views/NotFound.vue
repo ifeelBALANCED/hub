@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { watchEffect } from 'vue'
 
 const route = useRoute()
-
-watchEffect(() => {
-  console.error('404 Error: User attempted to access non-existent route:', route.path)
-})
 </script>
 
 <template>

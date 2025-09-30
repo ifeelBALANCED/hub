@@ -1,7 +1,7 @@
 import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query'
 import { appEnv } from '@/shared/lib/config'
 
-export const queryClient = new QueryClient({
+const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5,
@@ -48,4 +48,4 @@ export const queryClient = new QueryClient({
   },
 })
 
-export { VueQueryPlugin }
+export { VueQueryPlugin, queryClient }
