@@ -9,7 +9,6 @@ export const useAuthStore = defineStore('auth', () => {
   const router = useRouter()
 
   const handleLoginSuccess = async () => {
-    notificationService.success({ title: 'Login successful' })
     router.push({ name: 'home' })
   }
 

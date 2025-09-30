@@ -28,7 +28,7 @@ export function useAuthSession() {
     queryFn: getRequestUserMeGet,
     retry: false,
     staleTime: 60_000 * 5,
-    enabled: computed(() => userStore.isAuthenticated),
+    enabled: computed(() => userStore.isAuthenticated && !userStore.user),
   })
 
   watch(query.data, (data) => {
@@ -83,6 +83,7 @@ export function useLogin() {
         const userData = await getRequestUserMeGet()
         userStore.setUser(userData)
         await authStore.handleLoginSuccess()
+        notificationService.success({ title: 'Successfully signed in' })
       } catch {
         notificationService.error({ title: 'Failed to complete login process' })
       }
