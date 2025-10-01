@@ -32,18 +32,23 @@ export function useTheme() {
 
   const actualTheme = computed(() => {
     if (theme.value === 'system') {
+      if (isDarkMode.value === null) {
+        return 'light'
+      }
       return isDarkMode.value ? 'dark' : 'light'
     }
-    return theme.value
+    return theme.value as 'dark' | 'light'
   })
 
   watch(
     actualTheme,
     (newTheme) => {
-      if (newTheme === 'dark') {
-        document.documentElement.classList.add(THEME_DARK_CLASS)
-      } else {
-        document.documentElement.classList.remove(THEME_DARK_CLASS)
+      if (typeof document !== 'undefined' && document.documentElement) {
+        if (newTheme === 'dark') {
+          document.documentElement.classList.add(THEME_DARK_CLASS)
+        } else {
+          document.documentElement.classList.remove(THEME_DARK_CLASS)
+        }
       }
     },
     { immediate: true },
@@ -51,11 +56,15 @@ export function useTheme() {
 
   const toggleTheme = () => {
     const newTheme = actualTheme.value === 'light' ? 'dark' : 'light'
-    theme.value = newTheme
+    try {
+      theme.value = newTheme
+    } catch {}
   }
 
   const setTheme = (newTheme: Theme) => {
-    theme.value = newTheme
+    try {
+      theme.value = newTheme
+    } catch {}
   }
 
   return {

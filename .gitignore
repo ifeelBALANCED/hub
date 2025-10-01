@@ -32,5 +32,6 @@ coverage
 *.tsbuildinfo
 
 test-results/
+test-results.json
 playwright-report/
 dependency-graph-preview.svg
