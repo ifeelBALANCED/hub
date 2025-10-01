@@ -14,7 +14,7 @@ interface RouteMeta {
 const HomePage = () => import('@/views/HomeView.vue')
 const SignInPage = () => import('@/views/SignIn.vue')
 const GetStartedPage = () => import('@/views/GetStarted.vue')
-const MeetingPage = () => import('@/views/MeetingView.vue')
+const MeetingPage = () => import('@/pages/meeting/ui/MeetingPage.vue')
 const NotFoundPage = () => import('@/views/NotFound.vue')
 
 const OAuthCallbackPage = () => import('@/views/OAuthCallback.vue')

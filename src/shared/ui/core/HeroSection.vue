@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ArrowRight, Video, Shield, Zap } from 'lucide-vue-next'
+import { Video, Shield, Zap } from 'lucide-vue-next'
 import HubButton from '@/shared/ui/core/HubButton.vue'
 import ThemeToggle from '@/shared/ui/additionals/ThemeToggle.vue'
 import UserDropdown from '@/shared/ui/core/UserDropdown.vue'
+import { CreateRoomButton } from '@/features/create-room'
 import { useAuthSession } from '@/shared/composables/useAuth'
 
 const features = [
@@ -26,7 +27,6 @@ const features = [
 const authSession = useAuthSession()
 
 const emit = defineEmits<{
-  startMeeting: []
   joinMeeting: []
   signIn: []
   getStarted: []
@@ -87,10 +87,7 @@ const emit = defineEmits<{
         </p>
 
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-          <HubButton variant="hero" size="lg" class="text-lg px-8" @click="$emit('startMeeting')">
-            Start Meeting
-            <ArrowRight class="ml-2 h-5 w-5" />
-          </HubButton>
+          <CreateRoomButton />
           <HubButton variant="outline" size="lg" class="text-lg px-8" @click="$emit('joinMeeting')">
             Join Meeting
           </HubButton>
