@@ -15,7 +15,8 @@ export const useMeetingConnection = () => {
 
   const wsUrl = computed(() => {
     const wsBaseUrl = WebSocketUtils.getWebSocketUrl(appEnv.BACKEND_URL)
-    return `${wsBaseUrl}/meeting/${roomId.value}`
+    const url = `${wsBaseUrl}/meeting/${roomId.value}`
+    return url
   })
 
   const backoff = createWebSocketBackoff({
@@ -69,11 +70,13 @@ export const useMeetingConnection = () => {
     }
   }
 
-  const handleError = (_event: Event) => {
+  const handleError = (event: Event) => {
+    console.error('WebSocket error:', event)
     if (!WebSocketUtils.isAuthenticated()) {
       error.value = 'Authentication required - please log in to connect to the meeting'
     } else {
-      error.value = 'Connection failed - check your internet connection'
+      error.value =
+        'Connection failed - check your internet connection and backend WebSocket endpoint'
     }
 
     backoff.scheduleRetry(() => {
@@ -83,6 +86,7 @@ export const useMeetingConnection = () => {
   }
 
   const handleClose = (event: CloseEvent) => {
+    console.log('WebSocket closed:', event.code, event.reason)
     if (event.wasClean) {
       // Clean close - do nothing
     } else {
@@ -122,13 +126,16 @@ export const useMeetingConnection = () => {
   )
 
   watch(wsStatus, (status) => {
+    console.log('WebSocket status changed:', status)
     switch (status) {
       case 'OPEN':
         backoff.reset()
         reconnectAttempt.value = 0
         error.value = null
+        console.log('WebSocket connected successfully')
         break
       case 'CLOSED':
+        console.log('WebSocket closed, scheduling retry')
         if (!backoff.getRetryCount()) {
           backoff.scheduleRetry(() => {
             reconnectAttempt.value++

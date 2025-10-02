@@ -4,6 +4,8 @@
  * will automatically inherit cookies from HTTP requests
  */
 
+import { useUser } from '@/entities/user'
+
 export class WebSocketUtils {
   /**
    * Get WebSocket URL from backend HTTP URL
@@ -21,15 +23,15 @@ export class WebSocketUtils {
   }
 
   /**
-   * Check if user is authenticated by checking if we have user data
-   * This is a simple check since we're relying on cookies
+   * Check if user is authenticated by checking the user store
+   * This properly integrates with the Pinia user store
    */
   static isAuthenticated(): boolean {
-    // Simple check - if we have user data in sessionStorage, user is likely authenticated
-    // The actual authentication happens via HTTP cookies
     try {
-      const userData = sessionStorage.getItem('user')
-      return Boolean(userData)
+      // Use the user store to check authentication status
+      // This ensures consistency with the rest of the app
+      const { isAuthenticated } = useUser()
+      return isAuthenticated
     } catch {
       return false
     }
