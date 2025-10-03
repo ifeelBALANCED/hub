@@ -13,8 +13,6 @@ dist
 dist-ssr
 coverage
 *.local
-.env
-.vercel
 
 /cypress/videos/
 /cypress/screenshots/
@@ -32,6 +30,4 @@ coverage
 *.tsbuildinfo
 
 test-results/
-test-results.json
 playwright-report/
-dependency-graph-preview.svg

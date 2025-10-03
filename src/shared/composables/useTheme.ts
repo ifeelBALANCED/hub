@@ -1,117 +1,82 @@
-import { readonly, provide, inject, type Ref, type InjectionKey, computed, watch } from 'vue'
-import { useLocalStorage, useMediaQuery } from '@vueuse/core'
+import { useColorMode, useMediaQuery } from '@vueuse/core'
+import { computed, onMounted, watch } from 'vue'
 import { THEME_STORAGE_KEY, THEME_DARK_CLASS } from '@/shared/lib/constants'
 
-/**
- * Available theme options for the application.
- */
-export type Theme = 'dark' | 'light' | 'system'
+export type Theme = 'light' | 'dark' | 'system'
 
-/**
- * Context interface for theme management.
- */
-type ThemeContext = {
-  theme: Readonly<Ref<Theme>>
-  actualTheme: Readonly<Ref<'dark' | 'light'>>
-  toggleTheme: () => void
-  setTheme: (theme: Theme) => void
-}
-
-const ThemeContextKey: InjectionKey<ThemeContext> = Symbol('theme-context')
-
-/**
- * Provides theme management functionality with local storage persistence.
- * Automatically detects system preference and applies theme classes.
- *
- * @returns {Object} Theme context with current theme, actual theme, and control functions
- */
-export function useTheme() {
-  const theme = useLocalStorage<Theme>(THEME_STORAGE_KEY, 'system')
-
-  const isDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
-
-  const actualTheme = computed(() => {
-    if (theme.value === 'system') {
-      if (isDarkMode.value === null) {
-        return 'light'
-      }
-      return isDarkMode.value ? 'dark' : 'light'
-    }
-    return theme.value as 'dark' | 'light'
+export const useTheme = () => {
+  const prefersDark = useMediaQuery('(prefers-color-scheme: dark)')
+  const colorMode = useColorMode({
+    storageKey: THEME_STORAGE_KEY,
+    attribute: 'class',
+    modes: {
+      light: '',
+      dark: THEME_DARK_CLASS,
+      system: '',
+    },
+    initialValue: 'system' as Theme,
   })
 
-  watch(
-    actualTheme,
-    (newTheme) => {
-      if (typeof document !== 'undefined' && document.documentElement) {
-        if (newTheme === 'dark') {
-          document.documentElement.classList.add(THEME_DARK_CLASS)
-        } else {
-          document.documentElement.classList.remove(THEME_DARK_CLASS)
-        }
-      }
-    },
-    { immediate: true },
-  )
+  const isDark = computed(() => {
+    if (colorMode.value === 'system') {
+      return prefersDark.value
+    }
+    return colorMode.value === 'dark'
+  })
+
+  const currentTheme = computed(() => colorMode.value)
+
+  const isSystemTheme = computed(() => colorMode.value === 'system')
 
   const toggleTheme = () => {
-    const newTheme = actualTheme.value === 'light' ? 'dark' : 'light'
-    try {
-      theme.value = newTheme
-    } catch {}
+    if (colorMode.value === 'system') {
+      colorMode.value = prefersDark.value ? 'light' : 'dark'
+    } else {
+      colorMode.value = colorMode.value === 'light' ? 'dark' : 'light'
+    }
   }
 
-  const setTheme = (newTheme: Theme) => {
-    try {
-      theme.value = newTheme
-    } catch {}
+  const setTheme = (theme: Theme) => {
+    colorMode.value = theme
   }
+
+  const setLightTheme = () => setTheme('light')
+
+  const setDarkTheme = () => setTheme('dark')
+
+  const setSystemTheme = () => setTheme('system')
+
+  const applyThemeClass = () => {
+    const htmlElement = document.documentElement
+
+    htmlElement.classList.remove(THEME_DARK_CLASS)
+
+    if (colorMode.value === 'dark') {
+      htmlElement.classList.add(THEME_DARK_CLASS)
+    } else if (colorMode.value === 'system' && prefersDark.value) {
+      htmlElement.classList.add(THEME_DARK_CLASS)
+    }
+  }
+
+  watch(colorMode, applyThemeClass)
+
+  watch(prefersDark, applyThemeClass)
+
+  onMounted(applyThemeClass)
 
   return {
-    theme: readonly(theme),
-    actualTheme: readonly(actualTheme),
+    theme: colorMode,
+    currentTheme,
+    isDark,
+    isSystemTheme,
+    systemPrefersDark: prefersDark,
+
     toggleTheme,
     setTheme,
+    setLightTheme,
+    setDarkTheme,
+    setSystemTheme,
+
+    applyThemeClass,
   }
-}
-
-/**
- * Creates and provides the theme context to child components.
- * Must be called in a parent component to enable theme functionality.
- *
- * @example
- * ```vue
- * <script setup>
- * import { createThemeProvider } from '@/shared/composables/useTheme'
- *
- * createThemeProvider()
- * </script>
- * ```
- */
-export function createThemeProvider() {
-  const { theme, actualTheme, toggleTheme, setTheme } = useTheme()
-
-  provide(ThemeContextKey, {
-    theme,
-    actualTheme,
-    toggleTheme,
-    setTheme,
-  })
-}
-
-/**
- * Consumes the theme context from a parent provider.
- * Throws an error if used outside of a ThemeProvider.
- *
- * @returns {ThemeContext} The theme context with theme state and controls
- * @throws {Error} If used outside of a ThemeProvider
- */
-export function useThemeContext(): ThemeContext {
-  const context = inject(ThemeContextKey)
-
-  if (!context) {
-    throw new Error('useThemeContext must be used within a ThemeProvider')
-  }
-
-  return context
 }

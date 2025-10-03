@@ -3,7 +3,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
 import { Application, router } from './app'
-import { VueQueryPlugin, queryClient } from '@/shared/api'
+import { VueQueryPlugin, queryClient } from '@/shared/api/tanstack'
 
 const app = createApp(Application)
 

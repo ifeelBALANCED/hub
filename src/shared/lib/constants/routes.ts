@@ -1,9 +1,9 @@
 export const ROUTE_PATHS = {
   HOME: '/',
-  SIGN_IN: '/sign-in',
-  GET_STARTED: '/get-started',
+  AUTH: '/auth',
+  DASHBOARD: '/dashboard',
+  JOIN: '/join',
   MEETING: '/meeting',
-  MEETING_DETAILS: '/meeting/:roomId',
   NOT_FOUND: '/:pathMatch(.*)*',
 } as const
 

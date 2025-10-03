@@ -1,12 +1,7 @@
 <script setup lang="ts">
-import {} from 'vue-router'
 import { computed } from 'vue'
 import { useRoute, RouterView } from 'vue-router'
 import { Toaster } from 'vue-sonner'
-import { createThemeProvider } from '@/shared/composables/useTheme'
-import ThemeToggle from '@/shared/ui/additionals/ThemeToggle.vue'
-
-createThemeProvider()
 
 const route = useRoute()
 
@@ -27,5 +22,3 @@ const layout = computed(() => {
     <router-view v-else />
   </div>
 </template>
-
-<style scoped></style>

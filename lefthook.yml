@@ -1,42 +1,36 @@
 colors: true
 skip_output: [meta, success]
 
-#---------------------------------------------
-# Pre-commit checks
-#---------------------------------------------
 pre-commit:
   parallel: true
   commands:
     lint:
-      glob: "*.{js,jsx,ts,tsx,vue}"
+      glob: '*.{js,jsx,ts,tsx,vue}'
       run: |
         echo "🔍 Linting code..."
         bun run lint {staged_files}
       skip: [merge, rebase]
 
     format:
-      glob: "*.{js,jsx,ts,tsx,vue,json,md}"
+      glob: '*.{js,jsx,ts,tsx,vue,json,md}'
       stage_fixed: true
       run: |
         echo "✨ Formatting code..."
         bun run format
 
     typecheck:
-      glob: "*.{ts,tsx}"
+      glob: '*.{ts,tsx}'
       run: |
         echo "🔎 Type checking..."
         bun run type-check
       skip: [merge, rebase]
 
     no-debug:
-      glob: "*.{js,jsx,ts,tsx,vue}"
+      glob: '*.{js,jsx,ts,tsx,vue}'
       run: |
         echo "🐛 Checking for debug code..."
         grep -L "console.log\\|debugger" {staged_files} || echo "⚠️ Debug code detected!"
 
-#---------------------------------------------
-# Commit message validation
-#---------------------------------------------
 commit-msg:
   parallel: true
   commands:
@@ -45,9 +39,6 @@ commit-msg:
         echo "📝 Validating commit message..."
         npx --no-install commitlint --edit "$1"
 
-#---------------------------------------------
-# Branch operations
-#---------------------------------------------
 post-merge:
   commands:
     update-deps:
