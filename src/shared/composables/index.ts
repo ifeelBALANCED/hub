@@ -1,2 +1,2 @@
 export { useIsMobile } from './useMobile'
-export { useTheme } from './useTheme'
+export { useThemeContext, createThemeProvider } from './useTheme'

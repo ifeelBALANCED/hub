@@ -2,6 +2,7 @@
 import { Navbar } from '@/shared/ui/core'
 import { Button, Card } from '@/shared/ui/additionals'
 import { Video, Calendar, Users, Shield } from 'lucide-vue-next'
+import { RouterLink } from 'vue-router'
 </script>
 
 <template>
@@ -70,7 +71,7 @@ import { Video, Calendar, Users, Shield } from 'lucide-vue-next'
       </section>
     </main>
 
-    <footer class="border-t border-border bg-muted/50">
+    <footer class="border-t border-border bg-background">
       <div class="container py-8">
         <div class="flex flex-col items-center justify-between gap-4 md:flex-row">
           <div class="flex items-center gap-2 font-semibold">

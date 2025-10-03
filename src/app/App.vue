@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { createThemeProvider } from '@/shared/composables/useTheme'
 import { computed } from 'vue'
 import { useRoute, RouterView } from 'vue-router'
 import { Toaster } from 'vue-sonner'
+
+createThemeProvider()
 
 const route = useRoute()
 

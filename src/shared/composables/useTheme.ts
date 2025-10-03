@@ -1,82 +1,88 @@
-import { useColorMode, useMediaQuery } from '@vueuse/core'
-import { computed, onMounted, watch } from 'vue'
+import { computed, provide, inject, type InjectionKey, ref, type Ref } from 'vue'
+import { useColorMode, usePreferredDark } from '@vueuse/core'
 import { THEME_STORAGE_KEY, THEME_DARK_CLASS } from '@/shared/lib/constants'
 
 export type Theme = 'light' | 'dark' | 'system'
+export type Resolved = 'light' | 'dark'
 
-export const useTheme = () => {
-  const prefersDark = useMediaQuery('(prefers-color-scheme: dark)')
-  const colorMode = useColorMode({
+export interface ThemeContext {
+  theme: Readonly<Ref<Theme>>
+  actualTheme: Readonly<Ref<Resolved>>
+  isDark: Readonly<Ref<boolean>>
+  toggleTheme: () => void
+  setTheme: (t: Theme) => void
+  cycleTheme: () => void
+}
+
+export const ThemeContextKey: InjectionKey<ThemeContext> = Symbol('ThemeContext')
+
+const CYCLE: Theme[] = ['light', 'dark', 'system']
+const nextInCycle = (current: Theme): Theme | undefined => {
+  const i = CYCLE.indexOf(current)
+  return CYCLE[(i + 1) % CYCLE.length]
+}
+
+function useThemeCore(): ThemeContext {
+  const prefersDark = typeof window !== 'undefined' ? usePreferredDark() : ref(false)
+
+  const mode = useColorMode<'light' | 'dark' | 'auto'>({
     storageKey: THEME_STORAGE_KEY,
+    selector: 'html',
     attribute: 'class',
-    modes: {
-      light: '',
-      dark: THEME_DARK_CLASS,
-      system: '',
+    modes: { dark: THEME_DARK_CLASS },
+    initialValue: 'auto',
+    emitAuto: true,
+  })
+
+  const theme = computed<Theme>({
+    get: () => (mode.value === 'auto' ? 'system' : mode.value),
+    set: (v) => {
+      mode.value = v === 'system' ? 'auto' : v
     },
-    initialValue: 'system' as Theme,
   })
 
-  const isDark = computed(() => {
-    if (colorMode.value === 'system') {
-      return prefersDark.value
-    }
-    return colorMode.value === 'dark'
+  const actualTheme = computed<Resolved>(() => {
+    if (mode.value === 'dark') return 'dark'
+    if (mode.value === 'light') return 'light'
+    return prefersDark.value ? 'dark' : 'light'
   })
 
-  const currentTheme = computed(() => colorMode.value)
-
-  const isSystemTheme = computed(() => colorMode.value === 'system')
+  const isDark = computed(() => actualTheme.value === 'dark')
 
   const toggleTheme = () => {
-    if (colorMode.value === 'system') {
-      colorMode.value = prefersDark.value ? 'light' : 'dark'
-    } else {
-      colorMode.value = colorMode.value === 'light' ? 'dark' : 'light'
+    if (theme.value === 'system') {
+      theme.value = prefersDark.value ? 'light' : 'dark'
+      return
     }
+    theme.value = theme.value === 'dark' ? 'light' : 'dark'
   }
 
-  const setTheme = (theme: Theme) => {
-    colorMode.value = theme
+  const setTheme = (t: Theme) => {
+    theme.value = t
   }
 
-  const setLightTheme = () => setTheme('light')
-
-  const setDarkTheme = () => setTheme('dark')
-
-  const setSystemTheme = () => setTheme('system')
-
-  const applyThemeClass = () => {
-    const htmlElement = document.documentElement
-
-    htmlElement.classList.remove(THEME_DARK_CLASS)
-
-    if (colorMode.value === 'dark') {
-      htmlElement.classList.add(THEME_DARK_CLASS)
-    } else if (colorMode.value === 'system' && prefersDark.value) {
-      htmlElement.classList.add(THEME_DARK_CLASS)
-    }
+  const cycleTheme = () => {
+    theme.value = nextInCycle(theme.value) ?? 'light'
   }
-
-  watch(colorMode, applyThemeClass)
-
-  watch(prefersDark, applyThemeClass)
-
-  onMounted(applyThemeClass)
 
   return {
-    theme: colorMode,
-    currentTheme,
+    theme,
+    actualTheme,
     isDark,
-    isSystemTheme,
-    systemPrefersDark: prefersDark,
-
     toggleTheme,
     setTheme,
-    setLightTheme,
-    setDarkTheme,
-    setSystemTheme,
-
-    applyThemeClass,
+    cycleTheme,
   }
+}
+
+/** Call once near app root (e.g., in App.vue setup()). */
+export function createThemeProvider(): void {
+  provide(ThemeContextKey, useThemeCore())
+}
+
+/** Consume anywhere below the provider. */
+export function useThemeContext(): ThemeContext {
+  const ctx = inject(ThemeContextKey)
+  if (!ctx) throw new Error('useThemeContext must be used within a ThemeProvider')
+  return ctx
 }
