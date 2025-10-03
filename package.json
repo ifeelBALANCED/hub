@@ -21,7 +21,7 @@
     "lint:fix": "oxlint --fix",
     "prepare": "lefthook install",
     "preinstall": "npx only-allow bun",
-    "gen:api": "orval --config ./orval.config.ts",
+    "gen:api": "orval",
     "test:vitest": "vitest run --config vitest.config.ts",
     "test:playwright": "playwright test --config playwright.config.ts"
   },

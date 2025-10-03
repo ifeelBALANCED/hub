@@ -1,8 +1,8 @@
 import 'dotenv/config'
 import { defineConfig } from 'orval'
 
-const SWAGGER_URL = process.env.VITE_SWAGGER_URL ?? 'http://localhost:8000/api-docs'
-
+const SWAGGER_URL = process.env.VITE_SWAGGER_URL ?? 'http://localhost:4000/swagger/json'
+console.log(SWAGGER_URL)
 export default defineConfig({
   defaultClient: {
     input: {
