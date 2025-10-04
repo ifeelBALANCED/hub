@@ -2,7 +2,7 @@ import 'dotenv/config'
 import { defineConfig } from 'orval'
 
 const SWAGGER_URL = process.env.VITE_SWAGGER_URL ?? 'http://localhost:4000/swagger/json'
-console.log(SWAGGER_URL)
+
 export default defineConfig({
   defaultClient: {
     input: {
@@ -20,8 +20,7 @@ export default defineConfig({
         },
         query: {
           useQuery: true,
-          useInfinite: true,
-          useInfiniteQueryParam: 'nextId',
+          useInfinite: false,
         },
         contentType: {
           include: ['application/json'],

@@ -5,16 +5,13 @@
  * Production-ready backend for a Google Meet-like video conferencing application
  * OpenAPI spec version: 1.0.0
  */
-import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/vue-query'
+import { useMutation, useQuery } from '@tanstack/vue-query'
 import type {
   DataTag,
-  InfiniteData,
   MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UseInfiniteQueryOptions,
-  UseInfiniteQueryReturnType,
   UseMutationOptions,
   UseMutationReturnType,
   UseQueryOptions,
@@ -42,6 +39,43 @@ export interface UserResponse {
   updatedAt?: string
 }
 
+export interface RegisterRequest {
+  email: string
+  /** @minLength 8 */
+  password: string
+  /**
+   * @minLength 1
+   * @maxLength 255
+   */
+  displayName: string
+}
+
+export interface LoginRequest {
+  email: string
+  password: string
+}
+
+export interface OAuthGoogleRequest {
+  idToken: string
+}
+
+export interface RefreshTokenRequest {
+  refreshToken?: string
+}
+
+export interface TokensResponse {
+  accessToken?: string
+  refreshToken?: string
+  accessTokenExpiresIn?: number
+  refreshTokenExpiresIn?: number
+}
+
+export interface CreateMeetingRequest {
+  /** @maxLength 255 */
+  title?: string
+  scheduledAt?: string
+}
+
 export interface MeetingResponse {
   id?: string
   code?: string
@@ -52,11 +86,80 @@ export interface MeetingResponse {
   isActive?: boolean
 }
 
-export interface TokensResponse {
-  accessToken?: string
-  refreshToken?: string
-  accessTokenExpiresIn?: number
-  refreshTokenExpiresIn?: number
+export interface MeetingListResponse {
+  meetings?: MeetingResponse[]
+}
+
+export interface ResolveCodeRequest {
+  /** @pattern ^[a-z]{3}-[a-z]{4}-[a-z]{3}$ */
+  code: string
+}
+
+export interface RoomTokenRequest {
+  allowGuest?: boolean
+  displayName?: string
+}
+
+export interface RoomTokenResponse {
+  roomToken?: string
+}
+
+export type CreateInviteRequestRole =
+  (typeof CreateInviteRequestRole)[keyof typeof CreateInviteRequestRole]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateInviteRequestRole = {
+  guest: 'guest',
+  cohost: 'cohost',
+} as const
+
+export interface CreateInviteRequest {
+  email: string
+  role: CreateInviteRequestRole
+}
+
+export type InviteResponseRole = (typeof InviteResponseRole)[keyof typeof InviteResponseRole]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const InviteResponseRole = {
+  guest: 'guest',
+  cohost: 'cohost',
+} as const
+
+export type InviteResponseStatus = (typeof InviteResponseStatus)[keyof typeof InviteResponseStatus]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const InviteResponseStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  declined: 'declined',
+} as const
+
+export interface InviteResponse {
+  id?: string
+  meetingId?: string
+  email?: string
+  role?: InviteResponseRole
+  status?: InviteResponseStatus
+  createdAt?: string
+  expiresAt?: string
+}
+
+export interface InviteListResponse {
+  invites?: InviteResponse[]
+}
+
+export interface UpdateProfileRequest {
+  /**
+   * @minLength 1
+   * @maxLength 255
+   */
+  displayName?: string
+  avatarUrl?: string
+}
+
+export interface SuccessResponse {
+  success?: boolean
 }
 
 export type Get200 = {
@@ -68,48 +171,13 @@ export type Get200 = {
   swagger?: string
 }
 
-export type PostV1AuthRegisterBody = {
-  email: string
-  /** @minLength 8 */
-  password: string
-  /**
-   * @minLength 1
-   * @maxLength 255
-   */
-  displayName: string
-}
-
-export type PostV1AuthRegister201 = {
+export type PostV1AuthRefresh200 = {
   accessToken?: string
-  refreshToken?: string
   accessTokenExpiresIn?: number
-  refreshTokenExpiresIn?: number
 }
 
-export type PostV1AuthLoginBody = {
-  email: string
-  password: string
-}
-
-export type PostV1AuthLogin200 = {
-  accessToken?: string
-  refreshToken?: string
-  accessTokenExpiresIn?: number
-  refreshTokenExpiresIn?: number
-}
-
-export type PostV1AuthOauthGoogleBody = {
-  idToken: string
-}
-
-export type PostV1AuthRefreshBody = {
-  refreshToken?: string
-}
-
-export type PostV1MeetingsBody = {
-  /** @maxLength 255 */
-  title?: string
-  scheduledAt?: string
+export type GetV1AuthMe200 = {
+  user?: UserResponse
 }
 
 export type GetV1MeetingsParams = {
@@ -125,37 +193,8 @@ export type GetV1MeetingsParams = {
   limit?: number
 }
 
-export type PostV1MeetingsResolveCodeBody = {
-  /** @pattern ^[a-z]{3}-[a-z]{4}-[a-z]{3}$ */
-  code: string
-}
-
-export type PostV1MeetingsIdRoomTokenBody = {
-  allowGuest?: boolean
-  displayName?: string
-}
-
-export type PostV1MeetingsIdInvitesBodyRole =
-  (typeof PostV1MeetingsIdInvitesBodyRole)[keyof typeof PostV1MeetingsIdInvitesBodyRole]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PostV1MeetingsIdInvitesBodyRole = {
-  guest: 'guest',
-  cohost: 'cohost',
-} as const
-
-export type PostV1MeetingsIdInvitesBody = {
-  email: string
-  role: PostV1MeetingsIdInvitesBodyRole
-}
-
-export type PatchV1MeBody = {
-  /**
-   * @minLength 1
-   * @maxLength 255
-   */
-  displayName?: string
-  avatarUrl?: string
+export type PatchV1Me200 = {
+  user?: UserResponse
 }
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
@@ -170,56 +209,6 @@ export const get = (options?: SecondParameter<typeof customInstance>, signal?: A
 
 export const getGetQueryKey = () => {
   return [] as const
-}
-
-export const getGetInfiniteQueryOptions = <
-  TData = InfiniteData<Awaited<ReturnType<typeof get>>>,
-  TError = ErrorType<unknown>,
->(options?: {
-  query?: Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof get>>, TError, TData>>
-  request?: SecondParameter<typeof customInstance>
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {}
-
-  const queryKey = getGetQueryKey()
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof get>>> = ({ signal }) =>
-    get(requestOptions, signal)
-
-  return { queryKey, queryFn, ...queryOptions } as UseInfiniteQueryOptions<
-    Awaited<ReturnType<typeof get>>,
-    TError,
-    TData
-  >
-}
-
-export type GetInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof get>>>
-export type GetInfiniteQueryError = ErrorType<unknown>
-
-/**
- * @summary API Status
- */
-
-export function useGetInfinite<
-  TData = InfiniteData<Awaited<ReturnType<typeof get>>>,
-  TError = ErrorType<unknown>,
->(
-  options?: {
-    query?: Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof get>>, TError, TData>>
-    request?: SecondParameter<typeof customInstance>
-  },
-  queryClient?: QueryClient,
-): UseInfiniteQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetInfiniteQueryOptions(options)
-
-  const query = useInfiniteQuery(queryOptions, queryClient) as UseInfiniteQueryReturnType<
-    TData,
-    TError
-  > & { queryKey: DataTag<QueryKey, TData, TError> }
-
-  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>
-
-  return query
 }
 
 export const getGetQueryOptions = <
@@ -273,18 +262,18 @@ export function useGet<TData = Awaited<ReturnType<typeof get>>, TError = ErrorTy
  * @summary Register a new user
  */
 export const postV1AuthRegister = (
-  postV1AuthRegisterBody: MaybeRef<PostV1AuthRegisterBody>,
+  registerRequest: MaybeRef<RegisterRequest>,
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  postV1AuthRegisterBody = unref(postV1AuthRegisterBody)
+  registerRequest = unref(registerRequest)
 
-  return customInstance<PostV1AuthRegister201>(
+  return customInstance<TokensResponse>(
     {
       url: `/v1/auth/register`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      data: postV1AuthRegisterBody,
+      data: registerRequest,
       signal,
     },
     options,
@@ -292,20 +281,20 @@ export const postV1AuthRegister = (
 }
 
 export const getPostV1AuthRegisterMutationOptions = <
-  TError = ErrorType<void | void>,
+  TError = ErrorType<Error | Error>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof postV1AuthRegister>>,
     TError,
-    { data: BodyType<PostV1AuthRegisterBody> },
+    { data: BodyType<RegisterRequest> },
     TContext
   >
   request?: SecondParameter<typeof customInstance>
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postV1AuthRegister>>,
   TError,
-  { data: BodyType<PostV1AuthRegisterBody> },
+  { data: BodyType<RegisterRequest> },
   TContext
 > => {
   const mutationKey = ['postV1AuthRegister']
@@ -317,7 +306,7 @@ export const getPostV1AuthRegisterMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof postV1AuthRegister>>,
-    { data: BodyType<PostV1AuthRegisterBody> }
+    { data: BodyType<RegisterRequest> }
   > = (props) => {
     const { data } = props ?? {}
 
@@ -330,18 +319,18 @@ export const getPostV1AuthRegisterMutationOptions = <
 export type PostV1AuthRegisterMutationResult = NonNullable<
   Awaited<ReturnType<typeof postV1AuthRegister>>
 >
-export type PostV1AuthRegisterMutationBody = BodyType<PostV1AuthRegisterBody>
-export type PostV1AuthRegisterMutationError = ErrorType<void | void>
+export type PostV1AuthRegisterMutationBody = BodyType<RegisterRequest>
+export type PostV1AuthRegisterMutationError = ErrorType<Error | Error>
 
 /**
  * @summary Register a new user
  */
-export const usePostV1AuthRegister = <TError = ErrorType<void | void>, TContext = unknown>(
+export const usePostV1AuthRegister = <TError = ErrorType<Error | Error>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof postV1AuthRegister>>,
       TError,
-      { data: BodyType<PostV1AuthRegisterBody> },
+      { data: BodyType<RegisterRequest> },
       TContext
     >
     request?: SecondParameter<typeof customInstance>
@@ -350,7 +339,7 @@ export const usePostV1AuthRegister = <TError = ErrorType<void | void>, TContext 
 ): UseMutationReturnType<
   Awaited<ReturnType<typeof postV1AuthRegister>>,
   TError,
-  { data: BodyType<PostV1AuthRegisterBody> },
+  { data: BodyType<RegisterRequest> },
   TContext
 > => {
   const mutationOptions = getPostV1AuthRegisterMutationOptions(options)
@@ -363,18 +352,18 @@ export const usePostV1AuthRegister = <TError = ErrorType<void | void>, TContext 
  * @summary Login with email and password
  */
 export const postV1AuthLogin = (
-  postV1AuthLoginBody: MaybeRef<PostV1AuthLoginBody>,
+  loginRequest: MaybeRef<LoginRequest>,
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  postV1AuthLoginBody = unref(postV1AuthLoginBody)
+  loginRequest = unref(loginRequest)
 
-  return customInstance<PostV1AuthLogin200>(
+  return customInstance<TokensResponse>(
     {
       url: `/v1/auth/login`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      data: postV1AuthLoginBody,
+      data: loginRequest,
       signal,
     },
     options,
@@ -382,20 +371,20 @@ export const postV1AuthLogin = (
 }
 
 export const getPostV1AuthLoginMutationOptions = <
-  TError = ErrorType<void>,
+  TError = ErrorType<Error>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof postV1AuthLogin>>,
     TError,
-    { data: BodyType<PostV1AuthLoginBody> },
+    { data: BodyType<LoginRequest> },
     TContext
   >
   request?: SecondParameter<typeof customInstance>
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postV1AuthLogin>>,
   TError,
-  { data: BodyType<PostV1AuthLoginBody> },
+  { data: BodyType<LoginRequest> },
   TContext
 > => {
   const mutationKey = ['postV1AuthLogin']
@@ -407,7 +396,7 @@ export const getPostV1AuthLoginMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof postV1AuthLogin>>,
-    { data: BodyType<PostV1AuthLoginBody> }
+    { data: BodyType<LoginRequest> }
   > = (props) => {
     const { data } = props ?? {}
 
@@ -418,18 +407,18 @@ export const getPostV1AuthLoginMutationOptions = <
 }
 
 export type PostV1AuthLoginMutationResult = NonNullable<Awaited<ReturnType<typeof postV1AuthLogin>>>
-export type PostV1AuthLoginMutationBody = BodyType<PostV1AuthLoginBody>
-export type PostV1AuthLoginMutationError = ErrorType<void>
+export type PostV1AuthLoginMutationBody = BodyType<LoginRequest>
+export type PostV1AuthLoginMutationError = ErrorType<Error>
 
 /**
  * @summary Login with email and password
  */
-export const usePostV1AuthLogin = <TError = ErrorType<void>, TContext = unknown>(
+export const usePostV1AuthLogin = <TError = ErrorType<Error>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof postV1AuthLogin>>,
       TError,
-      { data: BodyType<PostV1AuthLoginBody> },
+      { data: BodyType<LoginRequest> },
       TContext
     >
     request?: SecondParameter<typeof customInstance>
@@ -438,7 +427,7 @@ export const usePostV1AuthLogin = <TError = ErrorType<void>, TContext = unknown>
 ): UseMutationReturnType<
   Awaited<ReturnType<typeof postV1AuthLogin>>,
   TError,
-  { data: BodyType<PostV1AuthLoginBody> },
+  { data: BodyType<LoginRequest> },
   TContext
 > => {
   const mutationOptions = getPostV1AuthLoginMutationOptions(options)
@@ -451,18 +440,18 @@ export const usePostV1AuthLogin = <TError = ErrorType<void>, TContext = unknown>
  * @summary OAuth login with Google
  */
 export const postV1AuthOauthGoogle = (
-  postV1AuthOauthGoogleBody: MaybeRef<PostV1AuthOauthGoogleBody>,
+  oAuthGoogleRequest: MaybeRef<OAuthGoogleRequest>,
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  postV1AuthOauthGoogleBody = unref(postV1AuthOauthGoogleBody)
+  oAuthGoogleRequest = unref(oAuthGoogleRequest)
 
-  return customInstance<void>(
+  return customInstance<TokensResponse>(
     {
       url: `/v1/auth/oauth/google`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      data: postV1AuthOauthGoogleBody,
+      data: oAuthGoogleRequest,
       signal,
     },
     options,
@@ -470,20 +459,20 @@ export const postV1AuthOauthGoogle = (
 }
 
 export const getPostV1AuthOauthGoogleMutationOptions = <
-  TError = ErrorType<void>,
+  TError = ErrorType<Error>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof postV1AuthOauthGoogle>>,
     TError,
-    { data: BodyType<PostV1AuthOauthGoogleBody> },
+    { data: BodyType<OAuthGoogleRequest> },
     TContext
   >
   request?: SecondParameter<typeof customInstance>
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postV1AuthOauthGoogle>>,
   TError,
-  { data: BodyType<PostV1AuthOauthGoogleBody> },
+  { data: BodyType<OAuthGoogleRequest> },
   TContext
 > => {
   const mutationKey = ['postV1AuthOauthGoogle']
@@ -495,7 +484,7 @@ export const getPostV1AuthOauthGoogleMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof postV1AuthOauthGoogle>>,
-    { data: BodyType<PostV1AuthOauthGoogleBody> }
+    { data: BodyType<OAuthGoogleRequest> }
   > = (props) => {
     const { data } = props ?? {}
 
@@ -508,18 +497,18 @@ export const getPostV1AuthOauthGoogleMutationOptions = <
 export type PostV1AuthOauthGoogleMutationResult = NonNullable<
   Awaited<ReturnType<typeof postV1AuthOauthGoogle>>
 >
-export type PostV1AuthOauthGoogleMutationBody = BodyType<PostV1AuthOauthGoogleBody>
-export type PostV1AuthOauthGoogleMutationError = ErrorType<void>
+export type PostV1AuthOauthGoogleMutationBody = BodyType<OAuthGoogleRequest>
+export type PostV1AuthOauthGoogleMutationError = ErrorType<Error>
 
 /**
  * @summary OAuth login with Google
  */
-export const usePostV1AuthOauthGoogle = <TError = ErrorType<void>, TContext = unknown>(
+export const usePostV1AuthOauthGoogle = <TError = ErrorType<Error>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof postV1AuthOauthGoogle>>,
       TError,
-      { data: BodyType<PostV1AuthOauthGoogleBody> },
+      { data: BodyType<OAuthGoogleRequest> },
       TContext
     >
     request?: SecondParameter<typeof customInstance>
@@ -528,7 +517,7 @@ export const usePostV1AuthOauthGoogle = <TError = ErrorType<void>, TContext = un
 ): UseMutationReturnType<
   Awaited<ReturnType<typeof postV1AuthOauthGoogle>>,
   TError,
-  { data: BodyType<PostV1AuthOauthGoogleBody> },
+  { data: BodyType<OAuthGoogleRequest> },
   TContext
 > => {
   const mutationOptions = getPostV1AuthOauthGoogleMutationOptions(options)
@@ -541,18 +530,18 @@ export const usePostV1AuthOauthGoogle = <TError = ErrorType<void>, TContext = un
  * @summary Refresh access token
  */
 export const postV1AuthRefresh = (
-  postV1AuthRefreshBody: MaybeRef<PostV1AuthRefreshBody>,
+  refreshTokenRequest: MaybeRef<RefreshTokenRequest>,
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  postV1AuthRefreshBody = unref(postV1AuthRefreshBody)
+  refreshTokenRequest = unref(refreshTokenRequest)
 
-  return customInstance<void>(
+  return customInstance<PostV1AuthRefresh200>(
     {
       url: `/v1/auth/refresh`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      data: postV1AuthRefreshBody,
+      data: refreshTokenRequest,
       signal,
     },
     options,
@@ -560,20 +549,20 @@ export const postV1AuthRefresh = (
 }
 
 export const getPostV1AuthRefreshMutationOptions = <
-  TError = ErrorType<void>,
+  TError = ErrorType<Error>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof postV1AuthRefresh>>,
     TError,
-    { data: BodyType<PostV1AuthRefreshBody> },
+    { data: BodyType<RefreshTokenRequest> },
     TContext
   >
   request?: SecondParameter<typeof customInstance>
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postV1AuthRefresh>>,
   TError,
-  { data: BodyType<PostV1AuthRefreshBody> },
+  { data: BodyType<RefreshTokenRequest> },
   TContext
 > => {
   const mutationKey = ['postV1AuthRefresh']
@@ -585,7 +574,7 @@ export const getPostV1AuthRefreshMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof postV1AuthRefresh>>,
-    { data: BodyType<PostV1AuthRefreshBody> }
+    { data: BodyType<RefreshTokenRequest> }
   > = (props) => {
     const { data } = props ?? {}
 
@@ -598,18 +587,18 @@ export const getPostV1AuthRefreshMutationOptions = <
 export type PostV1AuthRefreshMutationResult = NonNullable<
   Awaited<ReturnType<typeof postV1AuthRefresh>>
 >
-export type PostV1AuthRefreshMutationBody = BodyType<PostV1AuthRefreshBody>
-export type PostV1AuthRefreshMutationError = ErrorType<void>
+export type PostV1AuthRefreshMutationBody = BodyType<RefreshTokenRequest>
+export type PostV1AuthRefreshMutationError = ErrorType<Error>
 
 /**
  * @summary Refresh access token
  */
-export const usePostV1AuthRefresh = <TError = ErrorType<void>, TContext = unknown>(
+export const usePostV1AuthRefresh = <TError = ErrorType<Error>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof postV1AuthRefresh>>,
       TError,
-      { data: BodyType<PostV1AuthRefreshBody> },
+      { data: BodyType<RefreshTokenRequest> },
       TContext
     >
     request?: SecondParameter<typeof customInstance>
@@ -618,7 +607,7 @@ export const usePostV1AuthRefresh = <TError = ErrorType<void>, TContext = unknow
 ): UseMutationReturnType<
   Awaited<ReturnType<typeof postV1AuthRefresh>>,
   TError,
-  { data: BodyType<PostV1AuthRefreshBody> },
+  { data: BodyType<RefreshTokenRequest> },
   TContext
 > => {
   const mutationOptions = getPostV1AuthRefreshMutationOptions(options)
@@ -634,11 +623,14 @@ export const postV1AuthLogout = (
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({ url: `/v1/auth/logout`, method: 'POST', signal }, options)
+  return customInstance<SuccessResponse>(
+    { url: `/v1/auth/logout`, method: 'POST', signal },
+    options,
+  )
 }
 
 export const getPostV1AuthLogoutMutationOptions = <
-  TError = ErrorType<void>,
+  TError = ErrorType<Error>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -667,12 +659,12 @@ export type PostV1AuthLogoutMutationResult = NonNullable<
   Awaited<ReturnType<typeof postV1AuthLogout>>
 >
 
-export type PostV1AuthLogoutMutationError = ErrorType<void>
+export type PostV1AuthLogoutMutationError = ErrorType<Error>
 
 /**
  * @summary Logout user
  */
-export const usePostV1AuthLogout = <TError = ErrorType<void>, TContext = unknown>(
+export const usePostV1AuthLogout = <TError = ErrorType<Error>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof postV1AuthLogout>>,
@@ -697,66 +689,16 @@ export const getV1AuthMe = (
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({ url: `/v1/auth/me`, method: 'GET', signal }, options)
+  return customInstance<GetV1AuthMe200>({ url: `/v1/auth/me`, method: 'GET', signal }, options)
 }
 
 export const getGetV1AuthMeQueryKey = () => {
   return ['v1', 'auth', 'me'] as const
 }
 
-export const getGetV1AuthMeInfiniteQueryOptions = <
-  TData = InfiniteData<Awaited<ReturnType<typeof getV1AuthMe>>>,
-  TError = ErrorType<void>,
->(options?: {
-  query?: Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getV1AuthMe>>, TError, TData>>
-  request?: SecondParameter<typeof customInstance>
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {}
-
-  const queryKey = getGetV1AuthMeQueryKey()
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getV1AuthMe>>> = ({ signal }) =>
-    getV1AuthMe(requestOptions, signal)
-
-  return { queryKey, queryFn, ...queryOptions } as UseInfiniteQueryOptions<
-    Awaited<ReturnType<typeof getV1AuthMe>>,
-    TError,
-    TData
-  >
-}
-
-export type GetV1AuthMeInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getV1AuthMe>>>
-export type GetV1AuthMeInfiniteQueryError = ErrorType<void>
-
-/**
- * @summary Get current user
- */
-
-export function useGetV1AuthMeInfinite<
-  TData = InfiniteData<Awaited<ReturnType<typeof getV1AuthMe>>>,
-  TError = ErrorType<void>,
->(
-  options?: {
-    query?: Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getV1AuthMe>>, TError, TData>>
-    request?: SecondParameter<typeof customInstance>
-  },
-  queryClient?: QueryClient,
-): UseInfiniteQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetV1AuthMeInfiniteQueryOptions(options)
-
-  const query = useInfiniteQuery(queryOptions, queryClient) as UseInfiniteQueryReturnType<
-    TData,
-    TError
-  > & { queryKey: DataTag<QueryKey, TData, TError> }
-
-  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>
-
-  return query
-}
-
 export const getGetV1AuthMeQueryOptions = <
   TData = Awaited<ReturnType<typeof getV1AuthMe>>,
-  TError = ErrorType<void>,
+  TError = ErrorType<Error>,
 >(options?: {
   query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getV1AuthMe>>, TError, TData>>
   request?: SecondParameter<typeof customInstance>
@@ -776,7 +718,7 @@ export const getGetV1AuthMeQueryOptions = <
 }
 
 export type GetV1AuthMeQueryResult = NonNullable<Awaited<ReturnType<typeof getV1AuthMe>>>
-export type GetV1AuthMeQueryError = ErrorType<void>
+export type GetV1AuthMeQueryError = ErrorType<Error>
 
 /**
  * @summary Get current user
@@ -784,7 +726,7 @@ export type GetV1AuthMeQueryError = ErrorType<void>
 
 export function useGetV1AuthMe<
   TData = Awaited<ReturnType<typeof getV1AuthMe>>,
-  TError = ErrorType<void>,
+  TError = ErrorType<Error>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getV1AuthMe>>, TError, TData>>
@@ -808,18 +750,18 @@ export function useGetV1AuthMe<
  * @summary Create a new meeting
  */
 export const postV1Meetings = (
-  postV1MeetingsBody: MaybeRef<PostV1MeetingsBody>,
+  createMeetingRequest: MaybeRef<CreateMeetingRequest>,
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  postV1MeetingsBody = unref(postV1MeetingsBody)
+  createMeetingRequest = unref(createMeetingRequest)
 
-  return customInstance<void>(
+  return customInstance<MeetingResponse>(
     {
       url: `/v1/meetings/`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      data: postV1MeetingsBody,
+      data: createMeetingRequest,
       signal,
     },
     options,
@@ -827,20 +769,20 @@ export const postV1Meetings = (
 }
 
 export const getPostV1MeetingsMutationOptions = <
-  TError = ErrorType<void>,
+  TError = ErrorType<Error>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof postV1Meetings>>,
     TError,
-    { data: BodyType<PostV1MeetingsBody> },
+    { data: BodyType<CreateMeetingRequest> },
     TContext
   >
   request?: SecondParameter<typeof customInstance>
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postV1Meetings>>,
   TError,
-  { data: BodyType<PostV1MeetingsBody> },
+  { data: BodyType<CreateMeetingRequest> },
   TContext
 > => {
   const mutationKey = ['postV1Meetings']
@@ -852,7 +794,7 @@ export const getPostV1MeetingsMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof postV1Meetings>>,
-    { data: BodyType<PostV1MeetingsBody> }
+    { data: BodyType<CreateMeetingRequest> }
   > = (props) => {
     const { data } = props ?? {}
 
@@ -863,18 +805,18 @@ export const getPostV1MeetingsMutationOptions = <
 }
 
 export type PostV1MeetingsMutationResult = NonNullable<Awaited<ReturnType<typeof postV1Meetings>>>
-export type PostV1MeetingsMutationBody = BodyType<PostV1MeetingsBody>
-export type PostV1MeetingsMutationError = ErrorType<void>
+export type PostV1MeetingsMutationBody = BodyType<CreateMeetingRequest>
+export type PostV1MeetingsMutationError = ErrorType<Error>
 
 /**
  * @summary Create a new meeting
  */
-export const usePostV1Meetings = <TError = ErrorType<void>, TContext = unknown>(
+export const usePostV1Meetings = <TError = ErrorType<Error>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof postV1Meetings>>,
       TError,
-      { data: BodyType<PostV1MeetingsBody> },
+      { data: BodyType<CreateMeetingRequest> },
       TContext
     >
     request?: SecondParameter<typeof customInstance>
@@ -883,7 +825,7 @@ export const usePostV1Meetings = <TError = ErrorType<void>, TContext = unknown>(
 ): UseMutationReturnType<
   Awaited<ReturnType<typeof postV1Meetings>>,
   TError,
-  { data: BodyType<PostV1MeetingsBody> },
+  { data: BodyType<CreateMeetingRequest> },
   TContext
 > => {
   const mutationOptions = getPostV1MeetingsMutationOptions(options)
@@ -902,7 +844,7 @@ export const getV1Meetings = (
 ) => {
   params = unref(params)
 
-  return customInstance<void>(
+  return customInstance<MeetingListResponse>(
     { url: `/v1/meetings/`, method: 'GET', params: unref(params), signal },
     options,
   )
@@ -912,91 +854,9 @@ export const getGetV1MeetingsQueryKey = (params?: MaybeRef<GetV1MeetingsParams>)
   return ['v1', 'meetings', ...(params ? [params] : [])] as const
 }
 
-export const getGetV1MeetingsInfiniteQueryOptions = <
-  TData = InfiniteData<Awaited<ReturnType<typeof getV1Meetings>>, GetV1MeetingsParams['nextId']>,
-  TError = ErrorType<void>,
->(
-  params?: MaybeRef<GetV1MeetingsParams>,
-  options?: {
-    query?: Partial<
-      UseInfiniteQueryOptions<
-        Awaited<ReturnType<typeof getV1Meetings>>,
-        TError,
-        TData,
-        QueryKey,
-        GetV1MeetingsParams['nextId']
-      >
-    >
-    request?: SecondParameter<typeof customInstance>
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {}
-
-  const queryKey = getGetV1MeetingsQueryKey(params)
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof getV1Meetings>>,
-    QueryKey,
-    GetV1MeetingsParams['nextId']
-  > = ({ signal, pageParam }) =>
-    getV1Meetings(
-      { ...unref(params), nextId: pageParam || unref(params)?.['nextId'] },
-      requestOptions,
-      signal,
-    )
-
-  return { queryKey, queryFn, ...queryOptions } as UseInfiniteQueryOptions<
-    Awaited<ReturnType<typeof getV1Meetings>>,
-    TError,
-    TData,
-    QueryKey,
-    GetV1MeetingsParams['nextId']
-  >
-}
-
-export type GetV1MeetingsInfiniteQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getV1Meetings>>
->
-export type GetV1MeetingsInfiniteQueryError = ErrorType<void>
-
-/**
- * @summary List user meetings
- */
-
-export function useGetV1MeetingsInfinite<
-  TData = InfiniteData<Awaited<ReturnType<typeof getV1Meetings>>, GetV1MeetingsParams['nextId']>,
-  TError = ErrorType<void>,
->(
-  params?: MaybeRef<GetV1MeetingsParams>,
-  options?: {
-    query?: Partial<
-      UseInfiniteQueryOptions<
-        Awaited<ReturnType<typeof getV1Meetings>>,
-        TError,
-        TData,
-        QueryKey,
-        GetV1MeetingsParams['nextId']
-      >
-    >
-    request?: SecondParameter<typeof customInstance>
-  },
-  queryClient?: QueryClient,
-): UseInfiniteQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetV1MeetingsInfiniteQueryOptions(params, options)
-
-  const query = useInfiniteQuery(queryOptions, queryClient) as UseInfiniteQueryReturnType<
-    TData,
-    TError
-  > & { queryKey: DataTag<QueryKey, TData, TError> }
-
-  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>
-
-  return query
-}
-
 export const getGetV1MeetingsQueryOptions = <
   TData = Awaited<ReturnType<typeof getV1Meetings>>,
-  TError = ErrorType<void>,
+  TError = ErrorType<Error>,
 >(
   params?: MaybeRef<GetV1MeetingsParams>,
   options?: {
@@ -1019,7 +879,7 @@ export const getGetV1MeetingsQueryOptions = <
 }
 
 export type GetV1MeetingsQueryResult = NonNullable<Awaited<ReturnType<typeof getV1Meetings>>>
-export type GetV1MeetingsQueryError = ErrorType<void>
+export type GetV1MeetingsQueryError = ErrorType<Error>
 
 /**
  * @summary List user meetings
@@ -1027,7 +887,7 @@ export type GetV1MeetingsQueryError = ErrorType<void>
 
 export function useGetV1Meetings<
   TData = Awaited<ReturnType<typeof getV1Meetings>>,
-  TError = ErrorType<void>,
+  TError = ErrorType<Error>,
 >(
   params?: MaybeRef<GetV1MeetingsParams>,
   options?: {
@@ -1058,77 +918,19 @@ export const getV1MeetingsId = (
 ) => {
   id = unref(id)
 
-  return customInstance<void>({ url: `/v1/meetings/${id}`, method: 'GET', signal }, options)
+  return customInstance<MeetingResponse>(
+    { url: `/v1/meetings/${id}`, method: 'GET', signal },
+    options,
+  )
 }
 
 export const getGetV1MeetingsIdQueryKey = (id?: MaybeRef<string>) => {
   return ['v1', 'meetings', id] as const
 }
 
-export const getGetV1MeetingsIdInfiniteQueryOptions = <
-  TData = InfiniteData<Awaited<ReturnType<typeof getV1MeetingsId>>>,
-  TError = ErrorType<void | void | void>,
->(
-  id: MaybeRef<string>,
-  options?: {
-    query?: Partial<
-      UseInfiniteQueryOptions<Awaited<ReturnType<typeof getV1MeetingsId>>, TError, TData>
-    >
-    request?: SecondParameter<typeof customInstance>
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {}
-
-  const queryKey = getGetV1MeetingsIdQueryKey(id)
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getV1MeetingsId>>> = ({ signal }) =>
-    getV1MeetingsId(id, requestOptions, signal)
-
-  return {
-    queryKey,
-    queryFn,
-    enabled: computed(() => !!unref(id)),
-    ...queryOptions,
-  } as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getV1MeetingsId>>, TError, TData>
-}
-
-export type GetV1MeetingsIdInfiniteQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getV1MeetingsId>>
->
-export type GetV1MeetingsIdInfiniteQueryError = ErrorType<void | void | void>
-
-/**
- * @summary Get meeting details
- */
-
-export function useGetV1MeetingsIdInfinite<
-  TData = InfiniteData<Awaited<ReturnType<typeof getV1MeetingsId>>>,
-  TError = ErrorType<void | void | void>,
->(
-  id: MaybeRef<string>,
-  options?: {
-    query?: Partial<
-      UseInfiniteQueryOptions<Awaited<ReturnType<typeof getV1MeetingsId>>, TError, TData>
-    >
-    request?: SecondParameter<typeof customInstance>
-  },
-  queryClient?: QueryClient,
-): UseInfiniteQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetV1MeetingsIdInfiniteQueryOptions(id, options)
-
-  const query = useInfiniteQuery(queryOptions, queryClient) as UseInfiniteQueryReturnType<
-    TData,
-    TError
-  > & { queryKey: DataTag<QueryKey, TData, TError> }
-
-  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>
-
-  return query
-}
-
 export const getGetV1MeetingsIdQueryOptions = <
   TData = Awaited<ReturnType<typeof getV1MeetingsId>>,
-  TError = ErrorType<void | void | void>,
+  TError = ErrorType<Error | Error | Error>,
 >(
   id: MaybeRef<string>,
   options?: {
@@ -1152,7 +954,7 @@ export const getGetV1MeetingsIdQueryOptions = <
 }
 
 export type GetV1MeetingsIdQueryResult = NonNullable<Awaited<ReturnType<typeof getV1MeetingsId>>>
-export type GetV1MeetingsIdQueryError = ErrorType<void | void | void>
+export type GetV1MeetingsIdQueryError = ErrorType<Error | Error | Error>
 
 /**
  * @summary Get meeting details
@@ -1160,7 +962,7 @@ export type GetV1MeetingsIdQueryError = ErrorType<void | void | void>
 
 export function useGetV1MeetingsId<
   TData = Awaited<ReturnType<typeof getV1MeetingsId>>,
-  TError = ErrorType<void | void | void>,
+  TError = ErrorType<Error | Error | Error>,
 >(
   id: MaybeRef<string>,
   options?: {
@@ -1185,18 +987,18 @@ export function useGetV1MeetingsId<
  * @summary Resolve meeting code
  */
 export const postV1MeetingsResolveCode = (
-  postV1MeetingsResolveCodeBody: MaybeRef<PostV1MeetingsResolveCodeBody>,
+  resolveCodeRequest: MaybeRef<ResolveCodeRequest>,
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  postV1MeetingsResolveCodeBody = unref(postV1MeetingsResolveCodeBody)
+  resolveCodeRequest = unref(resolveCodeRequest)
 
-  return customInstance<void>(
+  return customInstance<MeetingResponse>(
     {
       url: `/v1/meetings/resolve-code`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      data: postV1MeetingsResolveCodeBody,
+      data: resolveCodeRequest,
       signal,
     },
     options,
@@ -1204,20 +1006,20 @@ export const postV1MeetingsResolveCode = (
 }
 
 export const getPostV1MeetingsResolveCodeMutationOptions = <
-  TError = ErrorType<void>,
+  TError = ErrorType<Error>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof postV1MeetingsResolveCode>>,
     TError,
-    { data: BodyType<PostV1MeetingsResolveCodeBody> },
+    { data: BodyType<ResolveCodeRequest> },
     TContext
   >
   request?: SecondParameter<typeof customInstance>
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postV1MeetingsResolveCode>>,
   TError,
-  { data: BodyType<PostV1MeetingsResolveCodeBody> },
+  { data: BodyType<ResolveCodeRequest> },
   TContext
 > => {
   const mutationKey = ['postV1MeetingsResolveCode']
@@ -1229,7 +1031,7 @@ export const getPostV1MeetingsResolveCodeMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof postV1MeetingsResolveCode>>,
-    { data: BodyType<PostV1MeetingsResolveCodeBody> }
+    { data: BodyType<ResolveCodeRequest> }
   > = (props) => {
     const { data } = props ?? {}
 
@@ -1242,18 +1044,18 @@ export const getPostV1MeetingsResolveCodeMutationOptions = <
 export type PostV1MeetingsResolveCodeMutationResult = NonNullable<
   Awaited<ReturnType<typeof postV1MeetingsResolveCode>>
 >
-export type PostV1MeetingsResolveCodeMutationBody = BodyType<PostV1MeetingsResolveCodeBody>
-export type PostV1MeetingsResolveCodeMutationError = ErrorType<void>
+export type PostV1MeetingsResolveCodeMutationBody = BodyType<ResolveCodeRequest>
+export type PostV1MeetingsResolveCodeMutationError = ErrorType<Error>
 
 /**
  * @summary Resolve meeting code
  */
-export const usePostV1MeetingsResolveCode = <TError = ErrorType<void>, TContext = unknown>(
+export const usePostV1MeetingsResolveCode = <TError = ErrorType<Error>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof postV1MeetingsResolveCode>>,
       TError,
-      { data: BodyType<PostV1MeetingsResolveCodeBody> },
+      { data: BodyType<ResolveCodeRequest> },
       TContext
     >
     request?: SecondParameter<typeof customInstance>
@@ -1262,7 +1064,7 @@ export const usePostV1MeetingsResolveCode = <TError = ErrorType<void>, TContext 
 ): UseMutationReturnType<
   Awaited<ReturnType<typeof postV1MeetingsResolveCode>>,
   TError,
-  { data: BodyType<PostV1MeetingsResolveCodeBody> },
+  { data: BodyType<ResolveCodeRequest> },
   TContext
 > => {
   const mutationOptions = getPostV1MeetingsResolveCodeMutationOptions(options)
@@ -1276,19 +1078,19 @@ export const usePostV1MeetingsResolveCode = <TError = ErrorType<void>, TContext 
  */
 export const postV1MeetingsIdRoomToken = (
   id: MaybeRef<string>,
-  postV1MeetingsIdRoomTokenBody: MaybeRef<PostV1MeetingsIdRoomTokenBody>,
+  roomTokenRequest: MaybeRef<RoomTokenRequest>,
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
   id = unref(id)
-  postV1MeetingsIdRoomTokenBody = unref(postV1MeetingsIdRoomTokenBody)
+  roomTokenRequest = unref(roomTokenRequest)
 
-  return customInstance<void>(
+  return customInstance<RoomTokenResponse>(
     {
       url: `/v1/meetings/${id}/room-token`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      data: postV1MeetingsIdRoomTokenBody,
+      data: roomTokenRequest,
       signal,
     },
     options,
@@ -1296,20 +1098,20 @@ export const postV1MeetingsIdRoomToken = (
 }
 
 export const getPostV1MeetingsIdRoomTokenMutationOptions = <
-  TError = ErrorType<void | void | void>,
+  TError = ErrorType<Error | Error | Error>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof postV1MeetingsIdRoomToken>>,
     TError,
-    { id: string; data: BodyType<PostV1MeetingsIdRoomTokenBody> },
+    { id: string; data: BodyType<RoomTokenRequest> },
     TContext
   >
   request?: SecondParameter<typeof customInstance>
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postV1MeetingsIdRoomToken>>,
   TError,
-  { id: string; data: BodyType<PostV1MeetingsIdRoomTokenBody> },
+  { id: string; data: BodyType<RoomTokenRequest> },
   TContext
 > => {
   const mutationKey = ['postV1MeetingsIdRoomToken']
@@ -1321,7 +1123,7 @@ export const getPostV1MeetingsIdRoomTokenMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof postV1MeetingsIdRoomToken>>,
-    { id: string; data: BodyType<PostV1MeetingsIdRoomTokenBody> }
+    { id: string; data: BodyType<RoomTokenRequest> }
   > = (props) => {
     const { id, data } = props ?? {}
 
@@ -1334,21 +1136,21 @@ export const getPostV1MeetingsIdRoomTokenMutationOptions = <
 export type PostV1MeetingsIdRoomTokenMutationResult = NonNullable<
   Awaited<ReturnType<typeof postV1MeetingsIdRoomToken>>
 >
-export type PostV1MeetingsIdRoomTokenMutationBody = BodyType<PostV1MeetingsIdRoomTokenBody>
-export type PostV1MeetingsIdRoomTokenMutationError = ErrorType<void | void | void>
+export type PostV1MeetingsIdRoomTokenMutationBody = BodyType<RoomTokenRequest>
+export type PostV1MeetingsIdRoomTokenMutationError = ErrorType<Error | Error | Error>
 
 /**
  * @summary Get room token
  */
 export const usePostV1MeetingsIdRoomToken = <
-  TError = ErrorType<void | void | void>,
+  TError = ErrorType<Error | Error | Error>,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof postV1MeetingsIdRoomToken>>,
       TError,
-      { id: string; data: BodyType<PostV1MeetingsIdRoomTokenBody> },
+      { id: string; data: BodyType<RoomTokenRequest> },
       TContext
     >
     request?: SecondParameter<typeof customInstance>
@@ -1357,7 +1159,7 @@ export const usePostV1MeetingsIdRoomToken = <
 ): UseMutationReturnType<
   Awaited<ReturnType<typeof postV1MeetingsIdRoomToken>>,
   TError,
-  { id: string; data: BodyType<PostV1MeetingsIdRoomTokenBody> },
+  { id: string; data: BodyType<RoomTokenRequest> },
   TContext
 > => {
   const mutationOptions = getPostV1MeetingsIdRoomTokenMutationOptions(options)
@@ -1371,19 +1173,19 @@ export const usePostV1MeetingsIdRoomToken = <
  */
 export const postV1MeetingsIdInvites = (
   id: MaybeRef<string>,
-  postV1MeetingsIdInvitesBody: MaybeRef<PostV1MeetingsIdInvitesBody>,
+  createInviteRequest: MaybeRef<CreateInviteRequest>,
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
   id = unref(id)
-  postV1MeetingsIdInvitesBody = unref(postV1MeetingsIdInvitesBody)
+  createInviteRequest = unref(createInviteRequest)
 
-  return customInstance<void>(
+  return customInstance<InviteResponse>(
     {
       url: `/v1/meetings/${id}/invites`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      data: postV1MeetingsIdInvitesBody,
+      data: createInviteRequest,
       signal,
     },
     options,
@@ -1391,20 +1193,20 @@ export const postV1MeetingsIdInvites = (
 }
 
 export const getPostV1MeetingsIdInvitesMutationOptions = <
-  TError = ErrorType<void | void | void>,
+  TError = ErrorType<Error | Error | Error>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof postV1MeetingsIdInvites>>,
     TError,
-    { id: string; data: BodyType<PostV1MeetingsIdInvitesBody> },
+    { id: string; data: BodyType<CreateInviteRequest> },
     TContext
   >
   request?: SecondParameter<typeof customInstance>
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postV1MeetingsIdInvites>>,
   TError,
-  { id: string; data: BodyType<PostV1MeetingsIdInvitesBody> },
+  { id: string; data: BodyType<CreateInviteRequest> },
   TContext
 > => {
   const mutationKey = ['postV1MeetingsIdInvites']
@@ -1416,7 +1218,7 @@ export const getPostV1MeetingsIdInvitesMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof postV1MeetingsIdInvites>>,
-    { id: string; data: BodyType<PostV1MeetingsIdInvitesBody> }
+    { id: string; data: BodyType<CreateInviteRequest> }
   > = (props) => {
     const { id, data } = props ?? {}
 
@@ -1429,21 +1231,21 @@ export const getPostV1MeetingsIdInvitesMutationOptions = <
 export type PostV1MeetingsIdInvitesMutationResult = NonNullable<
   Awaited<ReturnType<typeof postV1MeetingsIdInvites>>
 >
-export type PostV1MeetingsIdInvitesMutationBody = BodyType<PostV1MeetingsIdInvitesBody>
-export type PostV1MeetingsIdInvitesMutationError = ErrorType<void | void | void>
+export type PostV1MeetingsIdInvitesMutationBody = BodyType<CreateInviteRequest>
+export type PostV1MeetingsIdInvitesMutationError = ErrorType<Error | Error | Error>
 
 /**
  * @summary Create meeting invite
  */
 export const usePostV1MeetingsIdInvites = <
-  TError = ErrorType<void | void | void>,
+  TError = ErrorType<Error | Error | Error>,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof postV1MeetingsIdInvites>>,
       TError,
-      { id: string; data: BodyType<PostV1MeetingsIdInvitesBody> },
+      { id: string; data: BodyType<CreateInviteRequest> },
       TContext
     >
     request?: SecondParameter<typeof customInstance>
@@ -1452,7 +1254,7 @@ export const usePostV1MeetingsIdInvites = <
 ): UseMutationReturnType<
   Awaited<ReturnType<typeof postV1MeetingsIdInvites>>,
   TError,
-  { id: string; data: BodyType<PostV1MeetingsIdInvitesBody> },
+  { id: string; data: BodyType<CreateInviteRequest> },
   TContext
 > => {
   const mutationOptions = getPostV1MeetingsIdInvitesMutationOptions(options)
@@ -1471,77 +1273,19 @@ export const getV1MeetingsIdInvites = (
 ) => {
   id = unref(id)
 
-  return customInstance<void>({ url: `/v1/meetings/${id}/invites`, method: 'GET', signal }, options)
+  return customInstance<InviteListResponse>(
+    { url: `/v1/meetings/${id}/invites`, method: 'GET', signal },
+    options,
+  )
 }
 
 export const getGetV1MeetingsIdInvitesQueryKey = (id?: MaybeRef<string>) => {
   return ['v1', 'meetings', id, 'invites'] as const
 }
 
-export const getGetV1MeetingsIdInvitesInfiniteQueryOptions = <
-  TData = InfiniteData<Awaited<ReturnType<typeof getV1MeetingsIdInvites>>>,
-  TError = ErrorType<void | void | void>,
->(
-  id: MaybeRef<string>,
-  options?: {
-    query?: Partial<
-      UseInfiniteQueryOptions<Awaited<ReturnType<typeof getV1MeetingsIdInvites>>, TError, TData>
-    >
-    request?: SecondParameter<typeof customInstance>
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {}
-
-  const queryKey = getGetV1MeetingsIdInvitesQueryKey(id)
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getV1MeetingsIdInvites>>> = ({ signal }) =>
-    getV1MeetingsIdInvites(id, requestOptions, signal)
-
-  return {
-    queryKey,
-    queryFn,
-    enabled: computed(() => !!unref(id)),
-    ...queryOptions,
-  } as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getV1MeetingsIdInvites>>, TError, TData>
-}
-
-export type GetV1MeetingsIdInvitesInfiniteQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getV1MeetingsIdInvites>>
->
-export type GetV1MeetingsIdInvitesInfiniteQueryError = ErrorType<void | void | void>
-
-/**
- * @summary List meeting invites
- */
-
-export function useGetV1MeetingsIdInvitesInfinite<
-  TData = InfiniteData<Awaited<ReturnType<typeof getV1MeetingsIdInvites>>>,
-  TError = ErrorType<void | void | void>,
->(
-  id: MaybeRef<string>,
-  options?: {
-    query?: Partial<
-      UseInfiniteQueryOptions<Awaited<ReturnType<typeof getV1MeetingsIdInvites>>, TError, TData>
-    >
-    request?: SecondParameter<typeof customInstance>
-  },
-  queryClient?: QueryClient,
-): UseInfiniteQueryReturnType<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetV1MeetingsIdInvitesInfiniteQueryOptions(id, options)
-
-  const query = useInfiniteQuery(queryOptions, queryClient) as UseInfiniteQueryReturnType<
-    TData,
-    TError
-  > & { queryKey: DataTag<QueryKey, TData, TError> }
-
-  query.queryKey = unref(queryOptions).queryKey as DataTag<QueryKey, TData, TError>
-
-  return query
-}
-
 export const getGetV1MeetingsIdInvitesQueryOptions = <
   TData = Awaited<ReturnType<typeof getV1MeetingsIdInvites>>,
-  TError = ErrorType<void | void | void>,
+  TError = ErrorType<Error | Error | Error>,
 >(
   id: MaybeRef<string>,
   options?: {
@@ -1569,7 +1313,7 @@ export const getGetV1MeetingsIdInvitesQueryOptions = <
 export type GetV1MeetingsIdInvitesQueryResult = NonNullable<
   Awaited<ReturnType<typeof getV1MeetingsIdInvites>>
 >
-export type GetV1MeetingsIdInvitesQueryError = ErrorType<void | void | void>
+export type GetV1MeetingsIdInvitesQueryError = ErrorType<Error | Error | Error>
 
 /**
  * @summary List meeting invites
@@ -1577,7 +1321,7 @@ export type GetV1MeetingsIdInvitesQueryError = ErrorType<void | void | void>
 
 export function useGetV1MeetingsIdInvites<
   TData = Awaited<ReturnType<typeof getV1MeetingsIdInvites>>,
-  TError = ErrorType<void | void | void>,
+  TError = ErrorType<Error | Error | Error>,
 >(
   id: MaybeRef<string>,
   options?: {
@@ -1610,14 +1354,14 @@ export const postV1InvitesInviteIdAccept = (
 ) => {
   inviteId = unref(inviteId)
 
-  return customInstance<void>(
+  return customInstance<SuccessResponse>(
     { url: `/v1/invites/${inviteId}/accept`, method: 'POST', signal },
     options,
   )
 }
 
 export const getPostV1InvitesInviteIdAcceptMutationOptions = <
-  TError = ErrorType<void | void | void>,
+  TError = ErrorType<Error | Error | Error>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1656,13 +1400,13 @@ export type PostV1InvitesInviteIdAcceptMutationResult = NonNullable<
   Awaited<ReturnType<typeof postV1InvitesInviteIdAccept>>
 >
 
-export type PostV1InvitesInviteIdAcceptMutationError = ErrorType<void | void | void>
+export type PostV1InvitesInviteIdAcceptMutationError = ErrorType<Error | Error | Error>
 
 /**
  * @summary Accept invite
  */
 export const usePostV1InvitesInviteIdAccept = <
-  TError = ErrorType<void | void | void>,
+  TError = ErrorType<Error | Error | Error>,
   TContext = unknown,
 >(
   options?: {
@@ -1697,14 +1441,14 @@ export const postV1InvitesInviteIdDecline = (
 ) => {
   inviteId = unref(inviteId)
 
-  return customInstance<void>(
+  return customInstance<SuccessResponse>(
     { url: `/v1/invites/${inviteId}/decline`, method: 'POST', signal },
     options,
   )
 }
 
 export const getPostV1InvitesInviteIdDeclineMutationOptions = <
-  TError = ErrorType<void | void | void>,
+  TError = ErrorType<Error | Error | Error>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1743,13 +1487,13 @@ export type PostV1InvitesInviteIdDeclineMutationResult = NonNullable<
   Awaited<ReturnType<typeof postV1InvitesInviteIdDecline>>
 >
 
-export type PostV1InvitesInviteIdDeclineMutationError = ErrorType<void | void | void>
+export type PostV1InvitesInviteIdDeclineMutationError = ErrorType<Error | Error | Error>
 
 /**
  * @summary Decline invite
  */
 export const usePostV1InvitesInviteIdDecline = <
-  TError = ErrorType<void | void | void>,
+  TError = ErrorType<Error | Error | Error>,
   TContext = unknown,
 >(
   options?: {
@@ -1778,37 +1522,37 @@ export const usePostV1InvitesInviteIdDecline = <
  * @summary Update profile
  */
 export const patchV1Me = (
-  patchV1MeBody: MaybeRef<PatchV1MeBody>,
+  updateProfileRequest: MaybeRef<UpdateProfileRequest>,
   options?: SecondParameter<typeof customInstance>,
 ) => {
-  patchV1MeBody = unref(patchV1MeBody)
+  updateProfileRequest = unref(updateProfileRequest)
 
-  return customInstance<void>(
+  return customInstance<PatchV1Me200>(
     {
       url: `/v1/me`,
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      data: patchV1MeBody,
+      data: updateProfileRequest,
     },
     options,
   )
 }
 
 export const getPatchV1MeMutationOptions = <
-  TError = ErrorType<void>,
+  TError = ErrorType<Error>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof patchV1Me>>,
     TError,
-    { data: BodyType<PatchV1MeBody> },
+    { data: BodyType<UpdateProfileRequest> },
     TContext
   >
   request?: SecondParameter<typeof customInstance>
 }): UseMutationOptions<
   Awaited<ReturnType<typeof patchV1Me>>,
   TError,
-  { data: BodyType<PatchV1MeBody> },
+  { data: BodyType<UpdateProfileRequest> },
   TContext
 > => {
   const mutationKey = ['patchV1Me']
@@ -1820,7 +1564,7 @@ export const getPatchV1MeMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof patchV1Me>>,
-    { data: BodyType<PatchV1MeBody> }
+    { data: BodyType<UpdateProfileRequest> }
   > = (props) => {
     const { data } = props ?? {}
 
@@ -1831,18 +1575,18 @@ export const getPatchV1MeMutationOptions = <
 }
 
 export type PatchV1MeMutationResult = NonNullable<Awaited<ReturnType<typeof patchV1Me>>>
-export type PatchV1MeMutationBody = BodyType<PatchV1MeBody>
-export type PatchV1MeMutationError = ErrorType<void>
+export type PatchV1MeMutationBody = BodyType<UpdateProfileRequest>
+export type PatchV1MeMutationError = ErrorType<Error>
 
 /**
  * @summary Update profile
  */
-export const usePatchV1Me = <TError = ErrorType<void>, TContext = unknown>(
+export const usePatchV1Me = <TError = ErrorType<Error>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof patchV1Me>>,
       TError,
-      { data: BodyType<PatchV1MeBody> },
+      { data: BodyType<UpdateProfileRequest> },
       TContext
     >
     request?: SecondParameter<typeof customInstance>
@@ -1851,7 +1595,7 @@ export const usePatchV1Me = <TError = ErrorType<void>, TContext = unknown>(
 ): UseMutationReturnType<
   Awaited<ReturnType<typeof patchV1Me>>,
   TError,
-  { data: BodyType<PatchV1MeBody> },
+  { data: BodyType<UpdateProfileRequest> },
   TContext
 > => {
   const mutationOptions = getPatchV1MeMutationOptions(options)

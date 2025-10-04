@@ -7,10 +7,18 @@ import { VueQueryPlugin, queryClient } from '@/shared/api/tanstack'
 
 const app = createApp(Application)
 
-app.use(createPinia())
+const pinia = createPinia()
+
+app.use(pinia)
 app.use(router)
 app.use(VueQueryPlugin, {
   queryClient,
 })
 
 app.mount('#app')
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
+  })
+}

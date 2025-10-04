@@ -43,6 +43,11 @@ export class ErrorService implements IErrorService {
     const data = error.response?.data
 
     if (!status) {
+      const timeSinceLoad = Date.now() - (window.performance?.timing?.navigationStart || 0)
+      if (timeSinceLoad < 5000) {
+        return
+      }
+
       this.notificationService.error({
         title: 'Network Error',
         description: 'Please check your internet connection',
